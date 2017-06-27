@@ -1,0 +1,34 @@
+{
+  "name":"dzer/mllphp",
+  "description":"mll framework Project Template",
+  "type":"project",
+  "keywords":[
+    "framework",
+    "mllphp"
+  ],
+  "homepage":"http://www.meilele.com/",
+  "license":"MIT",
+  "authors":[
+    {
+      "name":"dzer",
+      "email":"d20053140@gmail.com",
+      "homepage":"https://dzer.me"
+    }
+  ],
+  "require":{
+    "php":">=5.5.0",
+    "dzer/mll-framework":"dev-master"
+  },
+  "extra":{
+    "mll-path":"mllphp"
+  },
+  "config":{
+    "preferred-install":"dist"
+  },
+  "repositories":{
+    "packagist":{
+      "type":"composer",
+      "url":"https://packagist.phpcomposer.com"
+    }
+  }
+}

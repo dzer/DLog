@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="zh-CN" />
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>DLog调试性能分析系统</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="./css/bootstrap-theme.min.css" rel="stylesheet">
+
+
+    <!-- Custom styles for this template -->
+    <link href="./css/theme.css" rel="stylesheet">
+
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<!-- Fixed navbar -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">DLog调试性能分析系统</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="#">仪表盘</a></li>
+                <li class="active"><a href="#about">最近运行</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">Dropdown <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Action</a></li>
+                        <li><a href="#">Another action</a></li>
+                        <li><a href="#">Something else here</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Nav header</li>
+                        <li><a href="#">Separated link</a></li>
+                        <li><a href="#">One more separated link</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container theme-showcase" role="main">
+    <div class="row">
+        <div class="col-md-12">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label>时间范围：</label>
+                    <input type="text" class="form-control" placeholder="开始时间" onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
+                    <input type="text" class="form-control" placeholder="结束时间" onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
+                </div>
+                <div class="form-group col-md-offset-1">
+                    <label for="exampleInputEmail2">请求地址：</label>
+                    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="url">
+                </div>
+                <button type="submit" class="btn btn-default">搜索</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="page-header">
+        <h1>最近访问</h1>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>时间</th>
+                    <th>URL</th>
+                    <th>LEVEL</th>
+                    <th>响应(ms)</th>
+                    <th>Server</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="danger">
+                    <td>2017-06-26 11:11:11</td>
+                    <td><span class="label label-primary">POST</span> http://mllphp.com/goods/Index/index</td>
+                    <td>info</td>
+                    <td><span class="label label-danger">800.3232</span></td>
+                    <td>192.168.1.1</td>
+                </tr>
+                <tr>
+                    <td>2017-06-26 11:11:11</td>
+                    <td>
+                        <span class="label label-info">GET</span>
+                        <a href="./p">http://mllphp.com/goods/Index/index</a>
+                    </td>
+                    <td>error</td>
+                    <td><span class="label label-success">40.3232</span></td>
+                    <td>192.168.1.1</td>
+                </tr>
+                <tr>
+                    <td>2017-06-26 11:11:11</td>
+                    <td>http://mllphp.com/goods/Index/index</td>
+                    <td>200</td>
+                    <td>40.3232</td>
+                    <td>192.168.1.1</td>
+                </tr>
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation" class="pull-right">
+                <ul class="pagination">
+                    <li>
+                        <a href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li><a href="#">1</a></li>
+                    <li><a href="#">2</a></li>
+                    <li><a href="#">3</a></li>
+                    <li><a href="#">4</a></li>
+                    <li><a href="#">5</a></li>
+                    <li>
+                        <a href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div> <!-- /container -->
+</body>
+</html>
