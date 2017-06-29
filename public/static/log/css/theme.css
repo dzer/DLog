@@ -17,3 +17,8 @@ body {
 .theme-showcase .navbar .container {
   width: auto;
 }
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

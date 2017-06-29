@@ -20,25 +20,9 @@ class Parse extends Controller
             }
             $mongo = new Mongo();
 
-            $rs = $mongo->setDBName('system_log')
+            $mongo->setDBName('system_log')
                 ->selectCollection('log')
                 ->batchInsert($logArr);
         }
-
-        var_dump($rs);
-        //return $this->render('index', ['data' => 'hehehhehe']);
-    }
-
-    public function show()
-    {
-
-            $mongo = new Mongo();
-
-            $rs = $mongo->setDBName('system_log')
-                ->selectCollection('log')
-                ->find();
-
-        var_dump($rs);
-        //return $this->render('index', ['data' => 'hehehhehe']);
     }
 }

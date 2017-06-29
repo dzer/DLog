@@ -36,6 +36,7 @@
                     <th style="width: 180px">时间</th>
                     <th>URL</th>
                     <th style="width: 110px">响应时间(ms)</th>
+                    <th style="width: 100px">内存占用</th>
                     <th style="width: 100px">日志级别</th>
                     <th style="width: 80px">Server</th>
                 </tr>
@@ -68,6 +69,13 @@
                                     <span class="label label-<?= $time_danger ? 'danger' : 'success' ?>">
                                         <?= sprintf('%.4f', ($log['content']['execTime'] * 1000)) ?>
                                     </span>
+                            </td>
+                            <td>
+                                <?php
+                                if (!empty($log['content']['useMemory'])) {
+                                    echo \Mll\Common\Common::convert(intval($log['content']['useMemory']));
+                                }
+                                ?>
                             </td>
                             <td><?= strtoupper($log['level']) ?></td>
                             <td><?= isset($log['server']) ? $log['server'] : ''?></td>

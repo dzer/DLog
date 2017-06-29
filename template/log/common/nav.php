@@ -12,9 +12,15 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="#">仪表盘</a></li>
-                <li class="active"><a href="#about">最近运行</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <?php
+                $action = \Mll\Mll::app()->request->getAction();
+
+                ?>
+                <li class="<?= $action == 'index' ? 'active' : ''?>"><a href="/log/Index/index">仪表盘</a></li>
+                <li class="<?= $action == 'just' ? 'active' : ''?>"><a href="/log/Index/just">最近运行</a></li>
+                <li><a href="#">性能排行</a></li>
+                <li><a href="#">异常统计</a></li>
+                <!--<li><a href="#contact">Contact</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                        aria-expanded="false">Dropdown <span class="caret"></span></a>
@@ -27,7 +33,7 @@
                         <li><a href="#">Separated link</a></li>
                         <li><a href="#">One more separated link</a></li>
                     </ul>
-                </li>
+                </li>-->
             </ul>
         </div><!--/.nav-collapse -->
     </div>

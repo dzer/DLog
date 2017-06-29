@@ -4,10 +4,15 @@
  */
 return [
     //是否开启调试模式
-    'app_debug' => false,
+    'app_debug' => true,
     //时区
     'time_zone' => 'Asia/Shanghai',
     'view_mode' => 'php',
+
+    'xhprof' => [
+        'enable' => true,
+        'path' => '/extend/xhprof',
+    ],
 
     'params' => [
         'rule_url' => 'sssss',
@@ -69,10 +74,6 @@ return [
             'level' => 'all', //默认所有，或者逗号隔开warning,error
         ]
     ],
-    'xhprof' => [
-        'enable' => true,
-        'path' => '/extend/xhprof',
-    ],
     'rpc' => [
         'driver' => 'yar',
         'yar' => [
@@ -95,7 +96,7 @@ return [
         ],
         'code' => [
             'driver' => 'memcache',
-            'host' => '192.168.31.169',
+            'host' => '192.168.2.214',
             'port' => 11211
         ],
         'file' => [

@@ -24,37 +24,55 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th width="600px">URL</th>
+                        <th width="50%">URL</th>
                         <th>traceId</th>
                         <th>TYPE</th>
                         <th>日志级别</th>
                         <th>响应(ms)</th>
                         <th>内存占用</th>
                         <th>Server</th>
+                        <th>xhprof</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php
                     if (!empty($rs)) {
+                        if ( \Mll\Mll::app()->config->get('xhprof.enable') && function_exists('xhprof_enable')){
+                            $xhprof_path = \Mll\Mll::app()->config->get('xhprof.path');
+                            require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_lib.php');
+                            require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_runs.php');
+                        }
                         foreach ($rs as $log) {
-                            $is_danger = 0;
+                            $is_danger = '';
                             if ((isset($log['content']['execTime']) && $log['content']['execTime'] > 0.5)
                                 || $log['level'] == 'error'
                             ) {
-                                $is_danger = 1;
+                                $is_danger = 'danger';
+                            } elseif ($log['level'] == 'warning' || $log['level'] == 'debug') {
+                                $is_danger = 'warning';
+                            } elseif ($log['level'] == 'notice') {
+                                $is_danger = 'info';
                             }
+
                             $count = 0;
                             if (isset($log['content']['traceId'])) {
                                 $count = substr_count($log['content']['traceId'], '.') * 2;
                             }
+                            $run_id = '';
+                            if (!empty($log['content']['xhprof']) && function_exists('xhprof_enable')){
+                                $xhprof_runs = new XHProfRuns_Default();
+                                $run_id = $xhprof_runs->save_run($log['content']['xhprof'], "xhprof_foo");
+                            }
 
                             $time_danger = isset($log['content']['execTime']) && $log['content']['execTime'] > 0.5 ? 1 : 0;
+
+                            $method_style = isset($log['content']['method']) && $log['content']['method'] == 'POST' ? 'primary' : 'info';
                             ?>
-                            <tr class="<?= $is_danger ? 'danger' : '' ?>">
+                            <tr class="<?= $is_danger ?>">
                                 <td style="padding-left: <?= ($count * 20) ?>px">
                                     <div>
-                                    <span class="label label-primary"><?= isset($log['method']) ? $log['method'] : '' ?></span>
-                                    <a href="#"><?= isset($log['content']['url']) ? $log['content']['url'] : $log['message'] ?></a>
+                                    <span class="label label-<?= $method_style ?>"><?= isset($log['content']['method']) ? $log['content']['method'] : '' ?></span>
+                                    <a href="#" onclick="showData('<?= $log['_id']?>')"><?= isset($log['content']['url']) ? $log['content']['url'] : $log['message'] ?></a>
                                     </div>
                                     <?php if (!empty($log['content']['errorMessage'])) {?>
                                         <span class="text-danger" style="display: block; margin: 5px; word-wrap:break-word; word-break:break-all; ">
@@ -82,6 +100,13 @@
                                     ?>
                                     </td>
                                 <td><?= isset($log['server']) ? $log['server'] : '' ?></td>
+                                <td>
+                                    <?php
+                                        if (!empty($run_id)) {
+                                            echo "<a target='_blank' href='http://localhost/xhprof/xhprof_html/index.php?run={$run_id}&source=xhprof_foo'>性能分析</a>";
+                                        }
+                                    ?>
+                                </td>
                             </tr>
                             <?php
                         }
@@ -92,4 +117,45 @@
             </div>
         </div>
     </div> <!-- /container -->
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">请求信息</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th width="100px;">参数名</th>
+                            <th>值</th>
+                        </tr>
+                        </thead>
+                        <tbody id="request-content">
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var rs = <?= $info ?>;
+        function showData(id) {
+            var str = '<tr><td>Time</td> <td>' + rs[id]['time'] + '</td></tr>'
+                +'<tr><td>URL</td><td>' + rs[id]['content']['url'] + '</td></tr><tr>'
+                +'<tr><td>Method</td><td>' + rs[id]['content']['method'] + '</td></tr><tr>'
+                +'<tr><td>请求头</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestHeaders'])) + '</pre></td></tr><tr>'
+                +'<tr><td>请求参数</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestParams'])) + '</pre></td></tr><tr>'
+                +'<tr><td>超时时间</td><td>' + rs[id]['content']['timeout'] + 's</td></tr><tr>'
+                +'<tr><td>错误消息</td><td>' + rs[id]['content']['errorMessage'] + '</td></tr><tr>';
+            $('#request-content').html(str);
+            $('#myModal').modal();
+        }
+    </script>
 <?php include(__DIR__ . '/../common/footer.php') ?>
