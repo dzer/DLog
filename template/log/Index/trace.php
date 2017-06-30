@@ -59,7 +59,7 @@
                                 $count = substr_count($log['content']['traceId'], '.') * 2;
                             }
                             $run_id = '';
-                            if (!empty($log['content']['xhprof']) && function_exists('xhprof_enable')){
+                            if (\Mll\Mll::app()->config->get('xhprof.enable') && !empty($log['content']['xhprof']) && function_exists('xhprof_enable')){
                                 $xhprof_runs = new XHProfRuns_Default();
                                 $run_id = $xhprof_runs->save_run($log['content']['xhprof'], "xhprof_foo");
                             }
