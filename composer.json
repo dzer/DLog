@@ -19,12 +19,6 @@
     "php":">=5.5.0",
     "dzer/mll-framework":"dev-master"
   },
-  "extra":{
-    "mll-path":"mllphp"
-  },
-  "config":{
-    "preferred-install":"dist"
-  },
   "repositories":{
     "packagist":{
       "type":"composer",
