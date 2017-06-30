@@ -7,22 +7,19 @@ return [
     'app_debug' => true,
     //时区
     'time_zone' => 'Asia/Shanghai',
+    //视图模型
     'view_mode' => 'php',
-
+    //xhprof
     'xhprof' => [
         'enable' => true,
         'path' => '/extend/xhprof',
     ],
-
-    'params' => [
-        'rule_url' => 'sssss',
-    ],
-
+    //request
     'request' => [
         'driver' => 'http',
         'http' => [
             // 默认模块名
-            'default_module' => 'goods',
+            'default_module' => 'log',
             // 禁止访问模块
             'deny_module_list' => ['common'],
             // 默认控制器名
@@ -30,7 +27,7 @@ return [
             // 默认操作名
             'default_action' => 'index',
             //兼容pathInfo
-            'path_info_var' => 'r',
+            'path_info_var' => 's',
             // 表单请求类型伪装变量
             'var_method' => '_method',
             //缓存服务器
@@ -39,6 +36,8 @@ return [
             'request_id_key' => 'x-request-id',
             //请求时间key
             'request_time_key' => 'x-request-time',
+            //全局过滤
+            'default_filter' => 'Mll\\Common\\Common::addslashes_deep'
         ],
         'rpc' => [
             //缓存服务器
@@ -49,15 +48,27 @@ return [
             'request_time_key' => 'x-request-time',
         ]
     ],
-
+    'db' => [
+        'mongo' => [
+            'dsn' => 'mongodb://192.168.2.214:27017', //服务器地址
+            'option' => [
+                'connect' => true, //参数
+                'db_name' => 'system_log', //数据库名称
+                'username' => '', //数据库用户名
+                'password' => '', //数据库密码
+            ]
+        ]
+    ],
+    //异常处理
     'exception' => [
         'template' => null,//错误提示模板
         'exception_handle' => '\Mll\Exception\Handle',//错误处理
         'show_error_msg' => true, //是否只显示错误信息
         'error_message' => '系统繁忙,请稍后再试', //错误提示
     ],
+    //日志
     'log' => [
-        'driver' => 'cache',
+        'driver' => 'file',
         'file' => [
             'time_format' => 'Y-m-d H:i:s', //ISO 8601 格式的日期
             'file_size' => 2097152, //文件大小
@@ -74,6 +85,7 @@ return [
             'level' => 'all', //默认所有，或者逗号隔开warning,error
         ]
     ],
+    //rpc
     'rpc' => [
         'driver' => 'yar',
         'yar' => [
@@ -82,6 +94,8 @@ return [
             'timeout' => 2,    //响应超时
         ],
     ],
+    'rule_cache' => 'rule',
+    //缓存
     'cache' => [
         'default' =>[
             'driver' => 'memcache',
@@ -96,11 +110,16 @@ return [
         ],
         'code' => [
             'driver' => 'memcache',
-            'host' => '192.168.2.214',
+            'host' => 'memcache.meilele.com',
+            'port' => 11211
+        ],
+        'rule' => [
+            'driver' => 'memcache',
+            'host' => 'memcache.meilele.com',
             'port' => 11211
         ],
         'file' => [
-            'driver' => 'file',
+            'driver' => 'cache',
             'file' => [
                 'expire'        => 0,
                 'cache_subdir'  => true,
