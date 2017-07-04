@@ -110,7 +110,7 @@ return [
         ],
         'code' => [
             'driver' => 'memcache',
-            'host' => 'memcache.meilele.com',
+            'host' => '192.168.2.214',
             'port' => 11211
         ],
         'rule' => [

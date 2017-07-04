@@ -14,31 +14,13 @@ class Index extends Controller
         return $this->render('index', ['data' => 'hehehhehe']);
     }
 
-    public function beforeAction()
-    {
-
-        return true;
-    }
-
     /**
      * 最近访问
      */
     public function just()
     {
-        //获取缓存中日志数据
-        $logs = LogService::pullLog(1000);
-        //分析日志并存储
-        if (!empty($logs)) {
-            $logArr = [];
-            foreach ($logs as $log) {
-                $logArr = array_merge($logArr, json_decode($log, true));
-            }
-            $mongo = new Mongo();
-
-            $mongo->setDBName('system_log')
-                ->selectCollection('log')
-                ->batchInsert($logArr);
-        }
+        //获取缓存中日志数据并存储
+       LogService::pullLog(1000);
 
         $mongo = new Mongo();
         $collection = $mongo->setDBName('system_log')->selectCollection('log');
@@ -58,9 +40,15 @@ class Index extends Controller
 
         $mongo = new Mongo();
         $collection = $mongo->setDBName('system_log')->selectCollection('log');
-        $rs = $collection->find(['requestId' => $requestId], ['content.traceId' => 1]);
+        $rs = $collection->find(['requestId' => $requestId]);
 
+        if (empty($rs)) {
+            throw new \Exception('跟踪日志不存在');
+        }
+        //traceId排序
+        $rs = LogService::traceLogVersionSort($rs);
         $mainRequest = reset($rs);
+
         return $this->render('trace', [
             'info' => json_encode($rs),
             'rs' => $rs,

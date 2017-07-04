@@ -8,8 +8,8 @@
                     <tbody>
                     <tr style="font-weight: bolder">
                         <td>请求时间：<?= $main['time'] ?></td>
-                        <td>执行时间: <?= sprintf('%.4f', ($main['content']['execTime'] * 1000)) ?> ms</td>
-                        <td>内存占用: <?= \Mll\Common\Common::convert(intval($main['content']['useMemory'])) ?></td>
+                        <td>执行时间: <?= sprintf('%.4f', (isset($main['content']['execTime']) ? $main['content']['execTime'] * 1000 : '')) ?> ms</td>
+                        <td>内存占用: <?= \Mll\Common\Common::convert(intval(isset($main['content']['useMemory']) ? $main['content']['useMemory'] : '')) ?></td>
                         <td>REQUEST_ID: <?= $main['requestId'] ?></td>
                     </tr>
                     </tbody>
@@ -37,7 +37,7 @@
                     <tbody>
                     <?php
                     if (!empty($rs)) {
-                        if ( \Mll\Mll::app()->config->get('xhprof.enable') && function_exists('xhprof_enable')){
+                        if (function_exists('xhprof_enable')){
                             $xhprof_path = \Mll\Mll::app()->config->get('xhprof.path');
                             require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_lib.php');
                             require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_runs.php');
@@ -59,7 +59,7 @@
                                 $count = substr_count($log['content']['traceId'], '.') * 2;
                             }
                             $run_id = '';
-                            if (\Mll\Mll::app()->config->get('xhprof.enable') && !empty($log['content']['xhprof']) && function_exists('xhprof_enable')){
+                            if (!empty($log['content']['xhprof']) && function_exists('xhprof_enable')){
                                 $xhprof_runs = new XHProfRuns_Default();
                                 $run_id = $xhprof_runs->save_run($log['content']['xhprof'], "xhprof_foo");
                             }
