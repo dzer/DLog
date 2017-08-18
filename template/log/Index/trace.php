@@ -27,6 +27,7 @@
                         <th width="50%">URL</th>
                         <th>traceId</th>
                         <th>TYPE</th>
+                        <th>状态码</th>
                         <th>日志级别</th>
                         <th>响应(ms)</th>
                         <th>内存占用</th>
@@ -42,7 +43,7 @@
                             require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_lib.php');
                             require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_runs.php');
                         }
-                        foreach ($rs as $log) {
+                        foreach ($rs as $k => $log) {
                             $is_danger = '';
                             if ((isset($log['content']['execTime']) && $log['content']['execTime'] > 0.5)
                                 || $log['level'] == 'error'
@@ -72,7 +73,7 @@
                                 <td style="padding-left: <?= ($count * 20) ?>px">
                                     <div>
                                     <span class="label label-<?= $method_style ?>"><?= isset($log['content']['method']) ? $log['content']['method'] : '' ?></span>
-                                    <a href="#" onclick="showData('<?= $log['_id']?>')"><?= isset($log['content']['url']) ? $log['content']['url'] : $log['message'] ?></a>
+                                    <a href="#" onclick="showData('<?= $k ?>')"><?= isset($log['content']['url']) ? $log['content']['url'] : $log['message'] ?></a>
                                     </div>
                                     <?php if (!empty($log['content']['errorMessage'])) {?>
                                         <span class="text-danger" style="display: block; margin: 5px; word-wrap:break-word; word-break:break-all; ">
@@ -82,13 +83,14 @@
                                 </td>
                                 <td><?= isset($log['content']['traceId']) ? $log['content']['traceId'] : '' ?></td>
                                 <td><?= $log['type'] ?></td>
+                                <td class="<?= isset($log['content']['responseCode']) && $log['content']['responseCode'] == 200 ? 'text-success' : 'text-danger'?>"><?= isset($log['content']['responseCode']) ? $log['content']['responseCode'] : ''?></td>
                                 <td><?= $log['level'] ?></td>
                                 <td>
                                     <?php
                                     if (isset($log['content']['execTime'])) {
                                         ?>
                                         <span class="label label-<?= $time_danger ? 'danger' : 'success' ?>">
-                                        <?= sprintf('%.4f', ($log['content']['execTime'] * 1000)) ?>
+                                        <?= sprintf('%.2f', ($log['content']['execTime'] * 1000)) ?>
                                     </span>
                                     <?php } ?>
                                 </td>
@@ -103,7 +105,7 @@
                                 <td>
                                     <?php
                                         if (!empty($run_id)) {
-                                            echo "<a target='_blank' href='http://localhost/xhprof/xhprof_html/index.php?run={$run_id}&source=xhprof_foo'>性能分析</a>";
+                                            echo "<a target='_blank' href='/xhprof.php?run={$run_id}&source=xhprof_foo'>性能分析</a>";
                                         }
                                     ?>
                                 </td>
@@ -146,6 +148,7 @@
     </div>
     <script>
         var rs = <?= $info ?>;
+        console.log(rs);
         function showData(id) {
             var str = '<tr><td>Time</td> <td>' + rs[id]['time'] + '</td></tr>'
                 +'<tr><td>URL</td><td>' + rs[id]['content']['url'] + '</td></tr><tr>'

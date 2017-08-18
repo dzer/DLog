@@ -11,7 +11,7 @@ return [
     'view_mode' => 'php',
     //xhprof
     'xhprof' => [
-        'enable' => true,
+        'enable' => false,
         'path' => '/extend/xhprof',
     ],
     //request
@@ -50,9 +50,17 @@ return [
     ],
     'db' => [
         'mongo' => [
-            'dsn' => 'mongodb://192.168.2.214:27017', //服务器地址
+            'dsn' => 'mongodb://192.168.0.104:27017', //服务器地址
             'option' => [
                 'connect' => true, //参数
+                'db_name' => 'system_log', //数据库名称
+                'username' => '', //数据库用户名
+                'password' => '', //数据库密码
+            ]
+        ],
+        'mongodb' => [
+            'dsn' => 'mongodb://192.168.0.104:27017', //服务器地址
+            'option' => [
                 'db_name' => 'system_log', //数据库名称
                 'username' => '', //数据库用户名
                 'password' => '', //数据库密码
@@ -100,7 +108,7 @@ return [
         'default' =>[
             'driver' => 'memcache',
             'default' => [
-                'host' => 'memcache.meilele.com ',
+                'host' => 'memcache.meilele.com',
                 'port' => 11211,
                 'prefix' => '',
                 'persistent' => true,
@@ -110,7 +118,7 @@ return [
         ],
         'code' => [
             'driver' => 'memcache',
-            'host' => '192.168.2.214',
+            'host' => 'memcache.meilele.com',
             'port' => 11211
         ],
         'rule' => [
@@ -119,14 +127,12 @@ return [
             'port' => 11211
         ],
         'file' => [
-            'driver' => 'cache',
-            'file' => [
-                'expire'        => 0,
-                'cache_subdir'  => true,
-                'prefix'        => '',
-                'path'          => '/runtime/temp/cache',
-                'data_compress' => false,
-            ]
+            'driver' => 'file',
+            'expire'        => 0,
+            'cache_subdir'  => true,
+            'prefix'        => '',
+            'path'          => '/runtime/temp/cache',
+            'data_compress' => false,
         ],
     ],
     'session' => [

@@ -6,27 +6,43 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <form class="form-inline">
-                <div class="form-group">
+            <form class="form-inline" action="<?= $base_url ?>">
+                <div class="form-group" style="margin: 10px 10px 0 0">
                     <label>时间范围：</label>
-                    <input type="text" class="form-control" placeholder="开始时间"
-                           onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
-                    <input type="text" class="form-control" placeholder="结束时间"
-                           onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})">
+                    <input type="text" name="start_time" class="form-control" placeholder="开始时间"
+                           onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['start_time']) ? $_GET['start_time'] : ''?>">
+                    <input type="text" name="end_time" class="form-control" placeholder="结束时间"
+                           onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['end_time']) ? $_GET['end_time'] : ''?>">
                 </div>
-                <div class="form-group" style="margin-left: 10px">
-                    <label for="exampleInputEmail2">请求地址：</label>
-                    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="url">
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>请求地址：</label>
+                    <input type="text" name="request_url" style="width: 200px;" class="form-control" value="<?= isset($_GET['request_url']) ? $_GET['request_url'] : ''?>" placeholder="url">
                 </div>
-                <div class="form-group" style="margin-left: 10px">
-                    <label for="exampleInputEmail2">日志级别：</label>
-                    <select class="form-control">
-                        <option>all</option>
-                        <option>info</option>
-                        <option>error</option>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>请求ID：</label>
+                    <input type="text" name="request_id" style="width: 150px;" class="form-control" value="<?= isset($_GET['request_id']) ? $_GET['request_id'] : ''?>" placeholder="requestId">
+                </div>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>日志级别：</label>
+                    <select name="log_level" class="form-control">
+                        <option value="">请选择</option>
+                        <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'info' ? 'selected="selected"' : ''?> value="info">info</option>
+                        <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'error' ? 'selected="selected"' : ''?> value="error">error</option>
+                        <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'warning' ? 'selected="selected"' : ''?> value="warning">warning</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-default" style="margin-left: 10px">搜索</button>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>日志类型：</label>
+                    <select name="log_type" class="form-control">
+                        <option value="">请选择</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">RULE</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">REQUEST</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">CURL</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-default" style="margin: 10px 10px 0 0">搜索</button>
+                <a type="submit" href="<?= $base_url ?>" class="btn btn-default" style="margin: 10px 10px 0 0">重置</a>
             </form>
         </div>
         <div class="col-md-12" style="margin-top: 15px">
@@ -35,6 +51,8 @@
                 <tr>
                     <th style="width: 180px">时间</th>
                     <th>URL</th>
+                    <th>类型</th>
+                    <th style="width: 110px">状态码</th>
                     <th style="width: 110px">响应时间(ms)</th>
                     <th style="width: 100px">内存占用</th>
                     <th style="width: 100px">日志级别</th>
@@ -46,18 +64,20 @@
                 if (!empty($rs)) {
                     foreach ($rs as $log) {
                         $is_danger = 0;
-                        if ($log['content']['execTime'] > 0.5 || $log['level'] == 'error') {
+                        if ($log['content']['execTime'] > 0.5 || $log['level'] == 'error' || (isset($log['content']['responseCode']) && $log['content']['responseCode'] != 200)) {
                             $is_danger = 1;
                         }
                         $time_danger = $log['content']['execTime'] > 0.5 ? 1 : 0;
+
+                        $method_style = isset($log['content']['method']) && $log['content']['method'] == 'POST' ? 'primary' : 'info';
 
                         ?>
                         <tr class="<?= $is_danger ? 'danger' : '' ?>">
                             <td><?= $log['time'] ?></td>
                             <td>
                                 <div>
-                                <span class="label label-primary"><?= $log['content']['method']?></span>
-                                <a target="_blank" href="/log/Index/trace?request_id=<?= $log['requestId'] ?>"><?= $log['content']['url'] ?></a>
+                                    <span class="label label-<?= $method_style ?>"><?= $log['content']['method']?></span>
+                                    <a target="_blank" style="<?= $log['content']['traceId'] == 0 ? 'font-weight:bold' : ''?>" href="/log/Index/trace?request_id=<?= $log['requestId'] ?>"><?= $log['content']['url'] ?></a>
                                 </div>
                                 <?php if (!empty($log['content']['errorMessage'])) {?>
                                 <span class="text-danger" style="display: block; margin: 5px; word-wrap:break-word; word-break:break-all; ">
@@ -65,9 +85,11 @@
                                 </span>
                                 <?php }?>
                             </td>
+                            <td><?= $log['type']?></td>
+                            <td class="<?= isset($log['content']['responseCode']) && $log['content']['responseCode'] == 200 ? 'text-success' : 'text-danger'?>"><?= isset($log['content']['responseCode']) ? $log['content']['responseCode'] : ''?></td>
                             <td>
                                     <span class="label label-<?= $time_danger ? 'danger' : 'success' ?>">
-                                        <?= sprintf('%.4f', ($log['content']['execTime'] * 1000)) ?>
+                                        <?= sprintf('%.2f', ($log['content']['execTime'] * 1000)) ?>
                                     </span>
                             </td>
                             <td>
@@ -88,21 +110,36 @@
             </table>
             <nav aria-label="Page navigation" class="pull-right">
                 <ul class="pagination">
-                    <li>
-                        <a href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">4</a></li>
-                    <li><a href="#">5</a></li>
-                    <li>
-                        <a href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
+                    <?php
+                        if (!empty($page)) {
+                            if ($page['page'] > 1) {
+                                $_GET['page'] = $page['page'] - 1;
+                                ?>
+                                <li>
+                                    <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <?php
+                            }
+                            for ($i = max(1, $page['page'] - 5); $i <= min($page['page'] + 5, $page['page_count']); $i++) {
+                                $_GET['page'] = $i;
+                                ?>
+                                <li <?= $page['page'] == $i ? 'class="active"' : ''?>><a href="<?= $base_url . '?' . http_build_query($_GET);?>"><?= $i ?></a></li>
+                                <?php
+                            }
+                            if ($page['page'] < $page['page_count']) {
+                                $_GET['page'] = $page['page'] + 1;
+                                ?>
+                                <li>
+                                    <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <?php
+                            }
+                        }
+                    ?>
                 </ul>
             </nav>
         </div>

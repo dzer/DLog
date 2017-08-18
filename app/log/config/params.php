@@ -1,6 +1,6 @@
 <?php
 return [
     'params' => [
-        'hehe' => 'dfdf'
+        'service_log_path' => '/usr/local/nginx/html/mllphp/runtime/log'
     ]
 ];
