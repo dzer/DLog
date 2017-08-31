@@ -20,7 +20,7 @@
                     </div>
                     <div class="form-group" style="margin-left: 10px">
                         <label>日志类型：</label>
-                        <select name="log_level" class="form-control">
+                        <select name="log_type" class="form-control">
                             <option value="">请选择</option>
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">RULE</option>
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
@@ -59,7 +59,7 @@
                             <tr class="<?= $is_danger ? 'danger' : '' ?>">
                                 <td>
                                     <div>
-                                        <a target="_blank" href="/log/Index/trace?request_id="><?= $log['_id']['url'] ?></a>
+                                        <a target="_blank" href="/log/Index/just?start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
                                     </div>
                                 </td>
                                 <td><?= $log['count'] ?></td>
@@ -70,7 +70,7 @@
                                     </span>
                                 </td>
                                 <td style="<?= $log['max_time'] > 0.5 ? 'color:red' : '' ?>"><?= sprintf('%.2f', ($log['max_time'] * 1000)) ?></td>
-                                <td><?= sprintf('%.1f', ($log['min_time'] * 1000)) ?></td>
+                                <td><?= sprintf('%.2f', ($log['min_time'] * 1000)) ?></td>
                                 <td>
                                     <ul class="table-ul">
                                         <?php

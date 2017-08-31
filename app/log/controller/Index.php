@@ -110,20 +110,31 @@ class Index extends Controller
      */
     public function rank()
     {
-        $time = Mll::app()->request->get('time', date('Y-m-d'));
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
+        $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
+        $request_url = Mll::app()->request->get('request_url');
+        $log_type = Mll::app()->request->get('log_type');
         //$call_sort = Mll::app()->request->get('call_sort', 1);
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 10, 'intval');
+        $_GET['start_time'] = $start_time;
+        $_GET['end_time'] = $end_time;
 
         $where = [];
-        if (!empty($time)) {
-            $_GET['time'] = $time;
-            $where['time']['$gte'] = $time;
-            $where['time']['$lte'] = $time . '23:59:59';
+        if (!empty($start_time)) {
+            $where['time']['$gte'] = $start_time;
         }
-
-
-        $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC, LOG_TYPE_RULE];
+        if (!empty($end_time)) {
+            $where['time']['$lte'] = $end_time;
+        }
+        if (!empty($request_url)) {
+            $where['content.url']['$regex'] = preg_quote(trim($request_url));
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        } else {
+            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC, LOG_TYPE_RULE];
+        }
 
         $mongo = new Mongo();
         $collection = $mongo->setDBName('system_log')->selectCollection('log');
