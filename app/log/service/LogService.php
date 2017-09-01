@@ -62,6 +62,8 @@ class LogService
             foreach ($logs as $log) {
                 $log = json_decode($log, true);
                 if (!empty($log)) {
+                    $orig_date = new \DateTime($log['time']);
+                    $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
                     $logArr[] = $log;
                 }
             }

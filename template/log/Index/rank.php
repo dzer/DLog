@@ -32,6 +32,7 @@
                     <a type="submit" href="<?= $base_url ?>" class="btn btn-default" style="margin-left: 10px">重置</a>
                 </form>
             </div>
+
             <div class="col-md-12" style="margin-top: 15px">
                 <table class="table table-striped">
                     <thead>
