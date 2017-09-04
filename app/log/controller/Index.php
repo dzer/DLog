@@ -226,6 +226,7 @@ class Index extends Controller
         $request_url = Mll::app()->request->get('request_url');
         $log_level = Mll::app()->request->get('log_level');
         $log_type = Mll::app()->request->get('log_type');
+        $responseCode = Mll::app()->request->get('responseCode');
         $request_id = Mll::app()->request->get('request_id');
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 20, 'intval');
@@ -252,6 +253,14 @@ class Index extends Controller
         }
         if (!empty($request_id)) {
             $where['requestId'] = $request_id;
+        }
+        if (is_numeric($responseCode)) {
+            if ($responseCode > 0) {
+                $where['content.responseCode']['$gte'] = intval($responseCode);
+                $where['content.responseCode']['$lte'] = intval($responseCode) + 20;
+            } else {
+                $where['content.responseCode']['$eq'] = $responseCode;
+            }
         }
 
         $mongo = new Mongo();

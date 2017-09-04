@@ -41,6 +41,16 @@
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
                     </select>
                 </div>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>http状态码：</label>
+                    <select name="responseCode" class="form-control">
+                        <option value="">请选择</option>
+                        <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '200' ? 'selected="selected"' : ''?> value="200">200</option>
+                        <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '400' ? 'selected="selected"' : ''?> value="400">400</option>
+                        <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '500' ? 'selected="selected"' : ''?> value="500">500</option>
+                        <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '0' ? 'selected="selected"' : ''?> value="0">0</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-default" style="margin: 10px 10px 0 0">搜索</button>
                 <a type="submit" href="<?= $base_url ?>" class="btn btn-default" style="margin: 10px 10px 0 0">重置</a>
             </form>
