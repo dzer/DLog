@@ -29,6 +29,7 @@
                         <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'info' ? 'selected="selected"' : ''?> value="info">info</option>
                         <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'error' ? 'selected="selected"' : ''?> value="error">error</option>
                         <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'warning' ? 'selected="selected"' : ''?> value="warning">warning</option>
+                        <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'notice' ? 'selected="selected"' : ''?> value="notice">notice</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin: 10px 10px 0 0">
@@ -39,6 +40,18 @@
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">REQUEST</option>
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">CURL</option>
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'SYSTEM' ? 'selected="selected"' : ''?> value="SYSTEM">SYSTEM</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'MYSQL' ? 'selected="selected"' : ''?> value="MYSQL">MYSQL</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>执行时间：</label>
+                    <select name="execTime" class="form-control">
+                        <option value="">请选择</option>
+                        <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '200' ? 'selected="selected"' : ''?> value="200">0~200ms</option>
+                        <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '500' ? 'selected="selected"' : ''?> value="500">200~500ms</option>
+                        <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1000' ? 'selected="selected"' : ''?> value="1000">500~1000ms</option>
+                        <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1000+' ? 'selected="selected"' : ''?> value="1000+">1000ms+</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin: 10px 10px 0 0">
@@ -86,8 +99,8 @@
                             <td><?= $log['time'] ?></td>
                             <td>
                                 <div>
-                                    <span class="label label-<?= $method_style ?>"><?= $log['content']['method']?></span>
-                                    <a target="_blank" style="<?= $log['content']['traceId'] == 0 ? 'font-weight:bold' : ''?>" href="/log/Index/trace?request_id=<?= $log['requestId'] ?>"><?= $log['content']['url'] ?></a>
+                                    <span class="label label-<?= $method_style ?>"><?= isset($log['content']['method']) ? $log['content']['method'] : ''?></span>
+                                    <a class="line" target="_blank" style="<?= $log['content']['traceId'] == 0 ? 'font-weight:bold' : ''?>" href="/log/Index/trace?request_id=<?= $log['requestId'] ?>"><?= $log['content']['url'] ?></a>
                                 </div>
                                 <?php if (!empty($log['content']['errorMessage'])) {?>
                                 <span class="text-danger" style="display: block; margin: 5px; word-wrap:break-word; word-break:break-all; ">
@@ -119,6 +132,7 @@
                 </tbody>
             </table>
             <nav aria-label="Page navigation" class="pull-right">
+                <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
                 <ul class="pagination">
                     <?php
                         if (!empty($page)) {

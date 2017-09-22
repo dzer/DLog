@@ -10,19 +10,8 @@ class Parse extends Controller
 {
     public function pull()
     {
-        //获取缓存中日志数据
-        $logs = LogService::pullLog(10);
-        //分析日志并存储
-        if (!empty($logs)) {
-            $logArr = [];
-            foreach ($logs as $log) {
-                $logArr = array_merge($logArr, json_decode($log, true));
-            }
-            $mongo = new Mongo();
-
-            $mongo->setDBName('system_log')
-                ->selectCollection('log')
-                ->batchInsert($logArr);
-        }
+        $num = isset($_GET['num']) ? intval($_GET['num']) : 1000;
+        //获取缓存中日志数据并存储
+        echo LogService::pullLogByMq($num);
     }
 }

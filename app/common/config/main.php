@@ -27,7 +27,7 @@ return [
             // 默认操作名
             'default_action' => 'index',
             //兼容pathInfo
-            'path_info_var' => 's',
+            'path_info_var' => 'r',
             // 表单请求类型伪装变量
             'var_method' => '_method',
             //缓存服务器
@@ -59,12 +59,20 @@ return [
             ]
         ],
         'mongodb' => [
-            'dsn' => 'mongodb://192.168.0.104:27017', //服务器地址
+            'dsn' => 'mongodb://114.67.59.203:27017', //服务器地址
             'option' => [
                 'db_name' => 'system_log', //数据库名称
-                'username' => '', //数据库用户名
-                'password' => '', //数据库密码
+                'username' => 'logfenxi', //数据库用户名
+                'password' => '9C1Xh(86%E7DFe', //数据库密码
             ]
+        ]
+    ],
+    'mq' => [
+        'rabbit' => [
+            'host' => '192.168.0.77',
+            'port' => '5672',
+            'login' => 'admin',
+            'password' => 'admin',
         ]
     ],
     //异常处理

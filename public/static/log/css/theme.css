@@ -29,3 +29,7 @@ pre {
 .table-ul li {
   list-style: none;
 }
+.line {
+  word-wrap: break-word;
+  word-break: break-all;
+}

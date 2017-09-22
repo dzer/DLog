@@ -3,6 +3,7 @@
 namespace app\log\service;
 
 use app\common\helpers\Common;
+use Mll\Common\Amqp;
 use Mll\Cache;
 use Mll\Common\MemcacheQueue;
 use Mll\Db\Mongo;
@@ -33,8 +34,7 @@ class LogService
                 }
             }
             $mongo = new Mongo();
-            $mongo->setDBName('system_log')
-                ->selectCollection('log')
+            $mongo->selectCollection('log')
                 ->batchInsert($logArr);
         }
         return true;
@@ -69,7 +69,47 @@ class LogService
             }
             unset($logs);
             $mongo = new Mongo();
-            $mongo->setDBName('system_log')->selectCollection('log')->batchInsert($logArr);
+            $mongo->selectCollection('log')->batchInsert($logArr);
+        }
+        return true;
+    }
+
+    /**
+     * 从MQ取出日志并存储
+     *
+     * @param int $num 日志条数
+     * @return array|bool
+     */
+    public static function pullLogByMq($num = 2000)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(240);
+        $num = min(1000, $num);
+
+        $mq = new Amqp(Mll::app()->config->get('mq.rabbit'));
+        while ($num--) {
+            $msg = $mq->getMessage('QUEUE_PHP_LOG');
+            if (empty($msg)) {
+                break;
+            }
+            $logs[] = $msg;
+        }
+        //分析日志并存储
+        if (!empty($logs)) {
+            $logArr = [];
+            foreach ($logs as $log) {
+                $log = json_decode($log, true);
+                if (!empty($log)) {
+                    $orig_date = new \DateTime($log['time']);
+                    $log['content']['url'] = strlen($log['content']['url']) > 1000 ?
+                        substr($log['content']['url'], 0, 1000) : $log['content']['url'];
+                    $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
+                    $logArr[] = $log;
+                }
+            }
+            unset($logs);
+            $mongo = new Mongo();
+            return $mongo->selectCollection('log')->batchInsert($logArr);
         }
         return true;
     }

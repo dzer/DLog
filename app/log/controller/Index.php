@@ -17,7 +17,7 @@ class Index extends Controller
         $_GET['curr_time'] = $curr_time;
         $where = [];
         $mongo = new Mongo();
-        $collection = $mongo->setDBName('system_log')->selectCollection('log');
+        $collection = $mongo->selectCollection('log');
         $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC, LOG_TYPE_RULE];
         if (!empty($log_type)) {
             $where['type'] = $log_type;
@@ -183,7 +183,7 @@ class Index extends Controller
             ]
         ];
         $mongo = new Mongo();
-        $collection = $mongo->setDBName('system_log')->selectCollection('log');
+        $collection = $mongo->selectCollection('log');
         $count_rs = $collection->executeCommand($countArr);
         unset($countArr);
         $count_rs = Common::objectToArray($count_rs);
@@ -218,9 +218,6 @@ class Index extends Controller
      */
     public function just()
     {
-        //获取缓存中日志数据并存储
-        LogService::pullLogByFile(1000);
-
         $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00', strtotime('-2 days')));
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
@@ -228,6 +225,7 @@ class Index extends Controller
         $log_type = Mll::app()->request->get('log_type');
         $responseCode = Mll::app()->request->get('responseCode');
         $request_id = Mll::app()->request->get('request_id');
+        $execTime = Mll::app()->request->get('execTime');
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 20, 'intval');
         $_GET['start_time'] = $start_time;
@@ -240,6 +238,24 @@ class Index extends Controller
         if (!empty($end_time)) {
             $where['time']['$lte'] = $end_time;
         }
+        if (!empty($execTime)) {
+            switch ($execTime) {
+                case '200':
+                    $where['content.execTime']['$lte'] = 0.2;
+                    break;
+                case '500':
+                    $where['content.execTime']['$gt'] = 0.2;
+                    $where['content.execTime']['$lte'] = 0.5;
+                    break;
+                case '1000':
+                    $where['content.execTime']['$gt'] = 0.5;
+                    $where['content.execTime']['$lte'] = 1;
+                    break;
+                case '1000+':
+                    $where['content.execTime']['$gt'] = 1;
+                    break;
+            }
+        }
         if (!empty($request_url)) {
             $where['content.url']['$regex'] = preg_quote(trim($request_url));
         }
@@ -249,7 +265,7 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         } else {
-            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC, LOG_TYPE_RULE];
+            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC];
         }
         if (!empty($request_id)) {
             $where['requestId'] = $request_id;
@@ -264,7 +280,7 @@ class Index extends Controller
         }
 
         $mongo = new Mongo();
-        $collection = $mongo->setDBName('system_log')->selectCollection('log');
+        $collection = $mongo->selectCollection('log');
         $count = $collection->count($where);
         //计算分页
         $page_count = ceil($count / $page_size);
@@ -278,6 +294,7 @@ class Index extends Controller
                 'page' => $page,
                 'page_size' => $page_size,
                 'page_count' => $page_count,
+                'count' => $count
             ],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
@@ -292,21 +309,24 @@ class Index extends Controller
         $requestId = Mll::app()->request->get('request_id');
 
         $mongo = new Mongo();
-        $collection = $mongo->setDBName('system_log')->selectCollection('log');
+        $collection = $mongo->selectCollection('log');
         $rs = $collection->find(['requestId' => $requestId]);
-
         $rs = Common::objectToArray($rs);
+
         if (empty($rs)) {
             throw new \Exception('跟踪日志不存在');
         }
-
+        $xhprof_dir = ROOT_PATH . '/runtime/xhprof' . DS . date('Ymd');
+        if (!is_dir($xhprof_dir)) {
+            @mkdir($xhprof_dir, 0777, true);
+        }
         //traceId排序
         $rs = LogService::traceLogVersionSort($rs);
-
         $mainRequest = reset($rs);
         return $this->render('trace', [
             'info' => json_encode($rs),
             'rs' => $rs,
+            'xhprof_dir' => $xhprof_dir,
             'main' => $mainRequest
         ]);
     }
@@ -339,11 +359,11 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         } else {
-            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC, LOG_TYPE_RULE];
+            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC];
         }
 
         $mongo = new Mongo();
-        $collection = $mongo->setDBName('system_log')->selectCollection('log');
+        $collection = $mongo->selectCollection('log');
         $comArr = [
             'aggregate' => 'log',
             'pipeline' => [

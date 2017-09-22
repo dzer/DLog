@@ -38,6 +38,7 @@
                     <tbody>
                     <?php
                     if (!empty($rs)) {
+
                         if (function_exists('xhprof_enable')){
                             $xhprof_path = \Mll\Mll::app()->config->get('xhprof.path');
                             require(ROOT_PATH . $xhprof_path . DS . 'xhprof_lib' . DS . 'utils' . DS . 'xhprof_lib.php');
@@ -61,7 +62,7 @@
                             }
                             $run_id = '';
                             if (!empty($log['content']['xhprof']) && function_exists('xhprof_enable')){
-                                $xhprof_runs = new XHProfRuns_Default();
+                                $xhprof_runs = new XHProfRuns_Default($xhprof_dir);
                                 $run_id = $xhprof_runs->save_run($log['content']['xhprof'], "xhprof_foo");
                             }
 
@@ -153,10 +154,10 @@
             var str = '<tr><td>Time</td> <td>' + rs[id]['time'] + '</td></tr>'
                 +'<tr><td>URL</td><td>' + rs[id]['content']['url'] + '</td></tr><tr>'
                 +'<tr><td>Method</td><td>' + rs[id]['content']['method'] + '</td></tr><tr>'
-                +'<tr><td>请求头</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestHeaders'])) + '</pre></td></tr><tr>'
                 +'<tr><td>请求参数</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestParams'])) + '</pre></td></tr><tr>'
                 +'<tr><td>超时时间</td><td>' + rs[id]['content']['timeout'] + 's</td></tr><tr>'
-                +'<tr><td>错误消息</td><td>' + rs[id]['content']['errorMessage'] + '</td></tr><tr>';
+                +'<tr><td>错误消息</td><td>' + rs[id]['content']['errorMessage'] + '</td></tr><tr>'
+                +'<tr><td>日志</td><td><pre>' + formatJson(JSON.stringify(rs[id])) + '</pre></td></tr><tr>';
             $('#request-content').html(str);
             $('#myModal').modal();
         }

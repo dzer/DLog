@@ -26,6 +26,7 @@
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">REQUEST</option>
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">CURL</option>
+                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'MYSQL' ? 'selected="selected"' : ''?> value="MYSQL">MYSQL</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-default" style="margin-left: 10px">搜索</button>
@@ -37,7 +38,7 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th>URL</th>
+                        <th style="max-width: 50%">URL</th>
                         <th>调用次数</th>
                         <th>类型</th>
                         <th style="width: 110px">平均响应时间(ms)</th>
@@ -60,7 +61,7 @@
                             <tr class="<?= $is_danger ? 'danger' : '' ?>">
                                 <td>
                                     <div>
-                                        <a target="_blank" href="/log/Index/just?start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
+                                        <a class="line" target="_blank" href="/log/Index/just?start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
                                     </div>
                                 </td>
                                 <td><?= $log['count'] ?></td>
