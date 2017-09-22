@@ -27,7 +27,7 @@ return [
             // 默认操作名
             'default_action' => 'index',
             //兼容pathInfo
-            'path_info_var' => 'r',
+            'path_info_var' => 's',
             // 表单请求类型伪装变量
             'var_method' => '_method',
             //缓存服务器
@@ -48,25 +48,6 @@ return [
             'request_time_key' => 'x-request-time',
         ]
     ],
-    'db' => [
-        'mongo' => [
-            'dsn' => 'mongodb://192.168.0.104:27017', //服务器地址
-            'option' => [
-                'connect' => true, //参数
-                'db_name' => 'system_log', //数据库名称
-                'username' => '', //数据库用户名
-                'password' => '', //数据库密码
-            ]
-        ],
-        'mongodb' => [
-            'dsn' => 'mongodb://114.67.59.203:27017', //服务器地址
-            'option' => [
-                'db_name' => 'system_log', //数据库名称
-                'username' => 'logfenxi', //数据库用户名
-                'password' => '9C1Xh(86%E7DFe', //数据库密码
-            ]
-        ]
-    ],
     'mq' => [
         'rabbit' => [
             'host' => '192.168.0.77',
@@ -74,6 +55,19 @@ return [
             'login' => 'admin',
             'password' => 'admin',
         ]
+    ],
+    'db' => [
+        'mongo' => [
+            'host' => '192.168.0.155:27017', //服务器地址
+            'database' => 'meilele_log_fenxi', //数据库名称
+            'username' => 'logfenxi', //数据库用户名
+            'password' => 'E1D5379C168', //数据库密码
+            'options' => [
+                'connectTimeoutMS' => 2000,
+                'socketTimeoutMSG' => 3000,
+                'readPreference'   => \MongoDB\Driver\ReadPreference::RP_SECONDARY_PREFERRED
+            ]
+        ],
     ],
     //异常处理
     'exception' => [

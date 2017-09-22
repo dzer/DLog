@@ -84,7 +84,7 @@ class LogService
     {
         ini_set('memory_limit', '512M');
         set_time_limit(240);
-        $num = min(1000, $num);
+        $num = min(10000, $num);
 
         $mq = new Amqp(Mll::app()->config->get('mq.rabbit'));
         while ($num--) {
@@ -101,6 +101,9 @@ class LogService
                 $log = json_decode($log, true);
                 if (!empty($log)) {
                     $orig_date = new \DateTime($log['time']);
+                    if (!isset($log['content']['url'])) {
+                        $log['content']['url'] = '?';
+                    }
                     $log['content']['url'] = strlen($log['content']['url']) > 1000 ?
                         substr($log['content']['url'], 0, 1000) : $log['content']['url'];
                     $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);

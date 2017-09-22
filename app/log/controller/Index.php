@@ -3,6 +3,7 @@
 namespace app\log\controller;
 
 use app\log\service\LogService;
+use Mll\Cache;
 use Mll\Common\Common;
 use Mll\Controller;
 use Mll\Db\Mongo;
@@ -10,6 +11,15 @@ use Mll\Mll;
 
 class Index extends Controller
 {
+    public function __construct()
+    {
+        if ((isset($_GET['admin']) && $_GET['admin'] == '2253dsag23&^') || (isset($_SESSION['admin']) && $_SESSION['admin'] == 1) ) {
+            $_SESSION['admin'] = 1;
+        } else {
+            exit('没有权限');
+        }
+    }
+
     public function index()
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
@@ -18,11 +28,18 @@ class Index extends Controller
         $where = [];
         $mongo = new Mongo();
         $collection = $mongo->selectCollection('log');
-        $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC, LOG_TYPE_RULE];
+        $where['type'] = LOG_TYPE_FINISH;
+        $_GET['log_type'] = $where['type'];
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
-        $count = $collection->count($where);
+        Cache::cut('file');
+        $count = Cache::get('log_count');
+        if (!$count) {
+            $count = $collection->count();
+            Cache::set('log_count', $count, 1800);
+        }
+
         if (!empty($curr_time)) {
             $where['time']['$gte'] = $curr_time . ' 00:00:00';
         }
@@ -136,10 +153,16 @@ class Index extends Controller
                 ],
             ]
         ];
-
-        $status_rs = $collection->executeCommand($statusArr);
+        $cache_key = 'log_status_rs_' . md5(serialize($where));
+        $status_rs = Cache::get($cache_key);
+        if ($status_rs === false) {
+            $status_rs = $collection->executeCommand($statusArr);
+            $status_rs = Common::objectToArray($status_rs);
+            Cache::set($cache_key, json_encode($status_rs), 1800);
+        } else {
+            $status_rs = json_decode($status_rs, true);
+        }
         unset($statusArr);
-        $status_rs = Common::objectToArray($status_rs);
 
         $countArr = [
             'aggregate' => 'log',
@@ -182,11 +205,21 @@ class Index extends Controller
                 ['$sort' => ['date' => -1]],
             ]
         ];
-        $mongo = new Mongo();
-        $collection = $mongo->selectCollection('log');
-        $count_rs = $collection->executeCommand($countArr);
+
+
+        $cache_key = 'log_count_rs_' . md5(serialize($where));
+        $count_rs = Cache::get($cache_key);
+        if ($count_rs === false) {
+            $mongo = new Mongo();
+            $collection = $mongo->selectCollection('log');
+            $count_rs = $collection->executeCommand($countArr);
+            $count_rs = Common::objectToArray($count_rs);
+            Cache::set($cache_key, json_encode($count_rs), 1800);
+        } else {
+            $count_rs = json_decode($count_rs, true);
+        }
         unset($countArr);
-        $count_rs = Common::objectToArray($count_rs);
+
         $countData = array();
         if (!empty($count_rs[0]['result'])) {
             foreach ($count_rs[0]['result'] as $_count) {
@@ -218,7 +251,7 @@ class Index extends Controller
      */
     public function just()
     {
-        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00', strtotime('-2 days')));
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_level = Mll::app()->request->get('log_level');
@@ -471,7 +504,7 @@ class Index extends Controller
                         'max_time' => ['$max' => '$execTime'],
                     ]
                 ],
-                ['$sort' => ['count' => -1]],
+                ['$sort' => ['time' => -1]],
             ],
         ];
         $rs = $collection->executeCommand($comArr);

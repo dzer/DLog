@@ -7,7 +7,7 @@
             <table class="table table-condensed">
                 <tbody>
                 <tr style="font-weight: 600; font-size: 18px; text-align: center">
-                    <td>调用总次数：<?= $count ?></td>
+                    <td>总日志数：<?= $count ?></td>
                     <td>今日调用次数: <?= $statusData['count']?></td>
                     <td>今日平均执行时间: <?= sprintf('%.1f', $statusData['time'] * 1000)?> ms</td>
                 </tr>
