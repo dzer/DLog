@@ -7,7 +7,7 @@
             <table class="table table-condensed">
                 <tbody>
                 <tr style="font-weight: 600; font-size: 18px; text-align: center">
-                    <td>总日志数：<?= $count ?></td>
+                    <td date_today="<?= $today_count ?>">总日志数：<?= $count ?></td>
                     <td>今日调用次数: <?= $statusData['count']?></td>
                     <td>今日平均执行时间: <?= sprintf('%.1f', $statusData['time'] * 1000)?> ms</td>
                 </tr>
@@ -19,6 +19,14 @@
         <div class="col-md-12">
             <form class="form-inline" action="<?= $base_url ?>">
                 <div class="form-group" style="margin-left: 10px">
+                    <label>项目：</label>
+                    <select name="project" class="form-control">
+                        <option <?= isset($_GET['project']) && $_GET['project'] == 'help' ? 'selected="selected"' : ''?> value="help">HELP</option>
+                        <option <?= isset($_GET['project']) && $_GET['project'] == 'mll' ? 'selected="selected"' : ''?> value="mll">MLL</option>
+                        <option <?= isset($_GET['project']) && $_GET['project'] == 'common' ? 'selected="selected"' : ''?> value="common">COMMON</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-left: 10px">
                     <label>时间：</label>
                     <input type="text" name="curr_time" class="form-control" placeholder="时间"
                            onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['curr_time']) ? $_GET['curr_time'] : ''?>">
@@ -28,16 +36,16 @@
                     <select name="log_type" class="form-control">
                         <option value="">请选择</option>
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : '' ?>
-                                value="RULE">RULE
+                                value="RULE">规则
                         </option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : '' ?>
+                       <!-- <option <?/*= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : '' */?>
                                 value="RPC">RPC
-                        </option>
+                        </option>-->
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : '' ?>
-                                value="REQUEST">REQUEST
+                                value="REQUEST">请求
                         </option>
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : '' ?>
-                                value="CURL">CURL
+                                value="CURL">接口
                         </option>
                     </select>
                 </div>
@@ -213,6 +221,7 @@
                         y: <?= intval($statusData['code_200'])?>,
                         sliced: true
                     },
+                    ['300',    <?= intval($statusData['code_300'])?>],
                     ['400',    <?= intval($statusData['code_400'])?>],
                     ['500',     <?= intval($statusData['code_500'])?>],
                     {

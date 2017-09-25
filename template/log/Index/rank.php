@@ -7,6 +7,14 @@
         <div class="row">
             <div class="col-md-12">
                 <form class="form-inline" action="<?= $base_url ?>">
+                    <div class="form-group" style="margin: 10px 10px 0 0">
+                        <label>项目：</label>
+                        <select name="project" class="form-control">
+                            <option <?= isset($_GET['project']) && $_GET['project'] == 'help' ? 'selected="selected"' : ''?> value="help">HELP</option>
+                            <option <?= isset($_GET['project']) && $_GET['project'] == 'mll' ? 'selected="selected"' : ''?> value="mll">MLL</option>
+                            <option <?= isset($_GET['project']) && $_GET['project'] == 'common' ? 'selected="selected"' : ''?> value="common">COMMON</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label>时间范围：</label>
                         <input type="text" name="start_time" class="form-control" placeholder="开始时间"
@@ -22,10 +30,10 @@
                         <label>日志类型：</label>
                         <select name="log_type" class="form-control">
                             <option value="">请选择</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">RULE</option>
+                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">规则</option>
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">REQUEST</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">CURL</option>
+                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">请求</option>
+                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">接口</option>
                             <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'MYSQL' ? 'selected="selected"' : ''?> value="MYSQL">MYSQL</option>
                         </select>
                     </div>
@@ -117,6 +125,7 @@
                     </tbody>
                 </table>
                 <nav aria-label="Page navigation" class="pull-right">
+                    <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
                     <ul class="pagination">
                         <?php
                         if (!empty($page)) {

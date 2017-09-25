@@ -19,7 +19,7 @@
                 <li class="<?= $action == 'index' ? 'active' : ''?>"><a href="/log/Index/index">仪表盘</a></li>
                 <li class="<?= $action == 'just' ? 'active' : ''?>"><a href="/log/Index/just">最近运行</a></li>
                 <li class="<?= $action == 'rank' ? 'active' : ''?>"><a href="/log/Index/rank">性能排行</a></li>
-                <li><a href="#">异常统计</a></li>
+                <!--<li><a href="#">异常统计</a></li>-->
                 <!--<li><a href="#contact">Contact</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"

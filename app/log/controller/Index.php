@@ -23,22 +23,31 @@ class Index extends Controller
     public function index()
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
-        $log_type = Mll::app()->request->get('log_type');
+        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
+        $project = Mll::app()->request->get('project', 'help');
+
         $_GET['curr_time'] = $curr_time;
         $where = [];
         $mongo = new Mongo();
         $collection = $mongo->selectCollection('log');
-        $where['type'] = LOG_TYPE_FINISH;
-        $_GET['log_type'] = $where['type'];
+        $_GET['log_type'] = $log_type;
+        $_GET['project'] = $project;
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
-        Cache::cut('file');
-        $count = Cache::get('log_count');
-        if (!$count) {
-            $count = $collection->count();
-            Cache::set('log_count', $count, 1800);
+        if (!empty($project)) {
+            $where['project'] = $project;
         }
+        Cache::cut('file');
+        $cache_key = 'log_count_' . date('d');
+        $count = Cache::get($cache_key);
+        if (isset($_GET['count']) || $count === false) {
+            $count = $mongo->count(['microtime' => ['$lte' => strtotime('-1 day')]]);
+            Cache::set($cache_key, $count, 0);
+        }
+        //今日日志量
+        $today_count = $mongo->count(['microtime' => ['$gte' => strtotime(date('Y-m-d'))]]);
+        $count += $today_count;
 
         if (!empty($curr_time)) {
             $where['time']['$gte'] = $curr_time . ' 00:00:00';
@@ -53,6 +62,7 @@ class Index extends Controller
             'pipeline' => [
                 [
                     '$project' => [
+                        'project' => 1,
                         'type' => 1,
                         'time' => 1,
                         'date' => [
@@ -169,6 +179,7 @@ class Index extends Controller
             'pipeline' => [
                 [
                     '$project' => [
+                        'project' => 1,
                         'item' => 1,
                         'url' => '$content.url',
                         'type' => 1,
@@ -180,7 +191,7 @@ class Index extends Controller
                         'httpCode_200' => [
                             '$cond' => [
                                 'if' => ['$and' => [
-                                    ['$eq' => ['$content.responseCode', 200]]
+                                    ['$gte' => ['$content.responseCode', 200]], ['$lte' => ['$content.responseCode', 320]]
                                 ]],
                                 'then' => 1,
                                 'else' => 0
@@ -241,6 +252,7 @@ class Index extends Controller
             'countData' => $countData,
             'statusData' => isset($status_rs[0]['result'][0]) ? $status_rs[0]['result'][0] : null,
             'count' => intval($count),
+            'today_count' => $today_count,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
         ]);
@@ -251,20 +263,30 @@ class Index extends Controller
      */
     public function just()
     {
+        $project = Mll::app()->request->get('project', 'help');
         $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_level = Mll::app()->request->get('log_level');
-        $log_type = Mll::app()->request->get('log_type');
+        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
         $responseCode = Mll::app()->request->get('responseCode');
         $request_id = Mll::app()->request->get('request_id');
         $execTime = Mll::app()->request->get('execTime');
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 20, 'intval');
+        $sort = Mll::app()->request->get('sort', 'time');
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
-
+        $_GET['sort'] = $sort;
+        $_GET['log_type'] = $log_type;
+        $_GET['project'] = $project;
+        if ($sort != 'time') {
+            $sort = 'content.' . $sort;
+        }
         $where = [];
+        if (!empty($project)) {
+            $where['project'] = $project;
+        }
         if (!empty($start_time)) {
             $where['time']['$gte'] = $start_time;
         }
@@ -298,7 +320,7 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         } else {
-            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC];
+            $where['type'] = LOG_TYPE_FINISH;
         }
         if (!empty($request_id)) {
             $where['requestId'] = $request_id;
@@ -318,7 +340,7 @@ class Index extends Controller
         //计算分页
         $page_count = ceil($count / $page_size);
 
-        $rs = $collection->find($where, ['time' => -1], ($page - 1) * $page_size, $page_size);
+        $rs = $collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size);
         $rs = Common::objectToArray($rs);
 
         return $this->render('just', [
@@ -356,6 +378,12 @@ class Index extends Controller
         //traceId排序
         $rs = LogService::traceLogVersionSort($rs);
         $mainRequest = reset($rs);
+        if (!isset($_GET['param'])) {
+            foreach ($rs as $k => $_rs) {
+                $rs[$k]['content']['requestParams'] = '';
+            }
+        }
+
         return $this->render('trace', [
             'info' => json_encode($rs),
             'rs' => $rs,
@@ -369,17 +397,21 @@ class Index extends Controller
      */
     public function rank()
     {
-        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'), '-10 day');
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
-        $log_type = Mll::app()->request->get('log_type');
-        //$call_sort = Mll::app()->request->get('call_sort', 1);
+        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
         $page = Mll::app()->request->get('page', 1, 'intval');
-        $page_size = Mll::app()->request->get('limit', 10, 'intval');
+        $page_size = Mll::app()->request->get('limit', 20, 'intval');
+        $project = Mll::app()->request->get('project', 'help');
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
-
+        $_GET['log_type'] = $log_type;
+        $_GET['project'] = $project;
         $where = [];
+        if (!empty($project)) {
+            $where['project'] = $project;
+        }
         if (!empty($start_time)) {
             $where['time']['$gte'] = $start_time;
         }
@@ -392,11 +424,14 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         } else {
-            $where['type']['$in'] = [LOG_TYPE_FINISH, LOG_TYPE_CURL, LOG_TYPE_RPC];
+            $where['type'] = LOG_TYPE_FINISH;
         }
 
         $mongo = new Mongo();
         $collection = $mongo->selectCollection('log');
+        $count = $collection->count($where);
+        //计算分页
+        $page_count = ceil($count / $page_size);
         $comArr = [
             'aggregate' => 'log',
             'pipeline' => [
@@ -406,6 +441,7 @@ class Index extends Controller
                         'url' => '$content.url',
                         'type' => 1,
                         'time' => 1,
+                        'project' => 1,
                         'execTime' => '$content.execTime',
                         'execTime_200' => [
                             '$cond' => [
@@ -505,6 +541,8 @@ class Index extends Controller
                     ]
                 ],
                 ['$sort' => ['time' => -1]],
+                ['$skip' => ($page - 1) * $page_size],
+                ['$limit' => $page_size]
             ],
         ];
         $rs = $collection->executeCommand($comArr);
@@ -513,9 +551,10 @@ class Index extends Controller
         return $this->render('rank', [
             'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
             'page' => [
-                'page' => 1,
-                'page_size' => 1,
-                'page_count' => 1,
+                'page' => $page,
+                'page_size' => $page_size,
+                'page_count' => $page_count,
+                'count' => $count
             ],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()

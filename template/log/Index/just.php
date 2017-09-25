@@ -8,6 +8,14 @@
         <div class="col-md-12">
             <form class="form-inline" action="<?= $base_url ?>">
                 <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>项目：</label>
+                    <select name="project" class="form-control">
+                        <option <?= isset($_GET['project']) && $_GET['project'] == 'help' ? 'selected="selected"' : ''?> value="help">HELP</option>
+                        <option <?= isset($_GET['project']) && $_GET['project'] == 'mll' ? 'selected="selected"' : ''?> value="mll">MLL</option>
+                        <option <?= isset($_GET['project']) && $_GET['project'] == 'common' ? 'selected="selected"' : ''?> value="common">COMMON</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 10px 10px 0 0">
                     <label>时间范围：</label>
                     <input type="text" name="start_time" class="form-control" placeholder="开始时间"
                            onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['start_time']) ? $_GET['start_time'] : ''?>">
@@ -36,11 +44,11 @@
                     <label>日志类型：</label>
                     <select name="log_type" class="form-control">
                         <option value="">请选择</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">RULE</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">REQUEST</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">CURL</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">规则</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">请求</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">接口</option>
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'SYSTEM' ? 'selected="selected"' : ''?> value="SYSTEM">SYSTEM</option>
+                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'SYSTEM' ? 'selected="selected"' : ''?> value="SYSTEM">系统</option>
                         <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'MYSQL' ? 'selected="selected"' : ''?> value="MYSQL">MYSQL</option>
                     </select>
                 </div>
@@ -62,6 +70,15 @@
                         <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '400' ? 'selected="selected"' : ''?> value="400">400</option>
                         <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '500' ? 'selected="selected"' : ''?> value="500">500</option>
                         <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '0' ? 'selected="selected"' : ''?> value="0">0</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>排序：</label>
+                    <select name="sort" class="form-control">
+                        <option value="">请选择</option>
+                        <option <?= isset($_GET['sort']) && $_GET['sort'] == 'execTime' ? 'selected="selected"' : ''?> value="execTime">执行时间</option>
+                        <option <?= isset($_GET['sort']) && $_GET['sort'] == 'responseCode' ? 'selected="selected"' : ''?> value="responseCode">状态码</option>
+                        <option <?= isset($_GET['sort']) && $_GET['sort'] == 'useMemory' ? 'selected="selected"' : ''?> value="useMemory">占用内存</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-default" style="margin: 10px 10px 0 0">搜索</button>

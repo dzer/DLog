@@ -50,18 +50,18 @@ return [
     ],
     'mq' => [
         'rabbit' => [
-            'host' => '192.168.0.104',
+            'host' => '192.168.0.77',
             'port' => '5672',
             'login' => 'admin',
-            'password' => '123456',
+            'password' => 'admin',
         ]
     ],
     'db' => [
         'mongo' => [
-            'host' => '192.168.0.104:27017', //服务器地址
-            'database' => 'system_log', //数据库名称
-            'username' => '', //数据库用户名
-            'password' => '', //数据库密码
+            'host' => '192.168.0.155:27017', //服务器地址
+            'database' => 'meilele_log_fenxi', //数据库名称
+            'username' => 'logfenxi', //数据库用户名
+            'password' => 'E1D5379C168', //数据库密码
             'options' => [
                 'connectTimeoutMS' => 2000,
                 'socketTimeoutMSG' => 3000,
