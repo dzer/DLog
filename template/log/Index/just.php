@@ -10,9 +10,7 @@
                 <div class="form-group" style="margin: 10px 10px 0 0">
                     <label>项目：</label>
                     <select name="project" class="form-control">
-                        <option <?= isset($_GET['project']) && $_GET['project'] == 'help' ? 'selected="selected"' : ''?> value="help">HELP</option>
-                        <option <?= isset($_GET['project']) && $_GET['project'] == 'mll' ? 'selected="selected"' : ''?> value="mll">MLL</option>
-                        <option <?= isset($_GET['project']) && $_GET['project'] == 'common' ? 'selected="selected"' : ''?> value="common">COMMON</option>
+                        <?= \app\common\helpers\Common::optionHtml($projects, 'project');?>
                     </select>
                 </div>
                 <div class="form-group" style="margin: 10px 10px 0 0">
@@ -44,12 +42,7 @@
                     <label>日志类型：</label>
                     <select name="log_type" class="form-control">
                         <option value="">请选择</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">规则</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">请求</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">接口</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'SYSTEM' ? 'selected="selected"' : ''?> value="SYSTEM">系统</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'MYSQL' ? 'selected="selected"' : ''?> value="MYSQL">MYSQL</option>
+                        <?= \app\common\helpers\Common::optionHtml($types, 'log_type');?>
                     </select>
                 </div>
                 <div class="form-group" style="margin: 10px 10px 0 0">
@@ -104,7 +97,8 @@
                 if (!empty($rs)) {
                     foreach ($rs as $log) {
                         $is_danger = 0;
-                        if ($log['content']['execTime'] > 0.5 || $log['level'] == 'error' || (isset($log['content']['responseCode']) && $log['content']['responseCode'] != 200)) {
+                        if ($log['content']['execTime'] > 0.5 || $log['level'] == 'error'
+                            || (isset($log['content']['responseCode']) && $log['content']['responseCode'] != 200 && $log['content']['responseCode'] != 302)) {
                             $is_danger = 1;
                         }
                         $time_danger = $log['content']['execTime'] > 0.5 ? 1 : 0;
@@ -126,7 +120,7 @@
                                 <?php }?>
                             </td>
                             <td><?= $log['type']?></td>
-                            <td class="<?= isset($log['content']['responseCode']) && $log['content']['responseCode'] == 200 ? 'text-success' : 'text-danger'?>"><?= isset($log['content']['responseCode']) ? $log['content']['responseCode'] : ''?></td>
+                            <td class="<?= isset($log['content']['responseCode']) && $log['content']['responseCode'] >= 200 && $log['content']['responseCode'] < 400 ? 'text-success' : 'text-danger'?>"><?= isset($log['content']['responseCode']) ? $log['content']['responseCode'] : ''?></td>
                             <td>
                                     <span class="label label-<?= $time_danger ? 'danger' : 'success' ?>">
                                         <?= sprintf('%.2f', ($log['content']['execTime'] * 1000)) ?>

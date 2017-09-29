@@ -10,9 +10,7 @@
                     <div class="form-group" style="margin: 10px 10px 0 0">
                         <label>项目：</label>
                         <select name="project" class="form-control">
-                            <option <?= isset($_GET['project']) && $_GET['project'] == 'help' ? 'selected="selected"' : ''?> value="help">HELP</option>
-                            <option <?= isset($_GET['project']) && $_GET['project'] == 'mll' ? 'selected="selected"' : ''?> value="mll">MLL</option>
-                            <option <?= isset($_GET['project']) && $_GET['project'] == 'common' ? 'selected="selected"' : ''?> value="common">COMMON</option>
+                            <?= \app\common\helpers\Common::optionHtml($projects, 'project');?>
                         </select>
                     </div>
                     <div class="form-group">
@@ -30,11 +28,17 @@
                         <label>日志类型：</label>
                         <select name="log_type" class="form-control">
                             <option value="">请选择</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : ''?> value="RULE">规则</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : ''?> value="RPC">RPC</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : ''?> value="REQUEST">请求</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : ''?> value="CURL">接口</option>
-                            <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'MYSQL' ? 'selected="selected"' : ''?> value="MYSQL">MYSQL</option>
+                            <?= \app\common\helpers\Common::optionHtml($types, 'log_type');?>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-left: 10px">
+                        <label>执行时间：</label>
+                        <select name="execTime" class="form-control">
+                            <option value="">请选择</option>
+                            <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '0.5' ? 'selected="selected"' : ''?> value="0.5">大于500ms</option>
+                            <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1' ? 'selected="selected"' : ''?> value="1">大于1s</option>
+                            <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '5' ? 'selected="selected"' : ''?> value="5">大于5s</option>
+                            <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '10' ? 'selected="selected"' : ''?> value="10">大于10s</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-default" style="margin-left: 10px">搜索</button>
@@ -69,7 +73,7 @@
                             <tr class="<?= $is_danger ? 'danger' : '' ?>">
                                 <td>
                                     <div>
-                                        <a class="line" target="_blank" href="/log/Index/just?start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
+                                        <a class="line" target="_blank" href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
                                     </div>
                                 </td>
                                 <td><?= $log['count'] ?></td>
@@ -91,7 +95,7 @@
                                                     '1000+' => '1000+'
                                             );
                                             foreach ($time_arr as $k => $_time) {
-                                                $time = $log['time_' . $_time] / $log['count'] * 100;
+                                                 $time = $log['time_' . $_time] / $log['count'] * 100;
                                                 if ($time > 0) {
                                                     echo '<li>' . $k .'ms: ' . sprintf('%.1f', $time) . '%</li>';
                                                 }

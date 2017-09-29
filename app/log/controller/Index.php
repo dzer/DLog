@@ -2,6 +2,7 @@
 
 namespace app\log\controller;
 
+use app\log\model\LogModel;
 use app\log\service\LogService;
 use Mll\Cache;
 use Mll\Common\Common;
@@ -13,7 +14,7 @@ class Index extends Controller
 {
     public function __construct()
     {
-        if ((isset($_GET['admin']) && $_GET['admin'] == '2253dsag23&^') || (isset($_SESSION['admin']) && $_SESSION['admin'] == 1) ) {
+        if (!Mll::app()->config->params('log_auth', true) || (isset($_GET['admin']) && $_GET['admin'] == '2253dsag23&^') || (isset($_SESSION['admin']) && $_SESSION['admin'] == 1)) {
             $_SESSION['admin'] = 1;
         } else {
             exit('没有权限');
@@ -24,237 +25,81 @@ class Index extends Controller
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
-        $project = Mll::app()->request->get('project', 'help');
-
+        $project = Mll::app()->request->get('project', 'mll');
         $_GET['curr_time'] = $curr_time;
-        $where = [];
-        $mongo = new Mongo();
-        $collection = $mongo->selectCollection('log');
         $_GET['log_type'] = $log_type;
         $_GET['project'] = $project;
+
+        $where = [];
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
         if (!empty($project)) {
             $where['project'] = $project;
         }
-        Cache::cut('file');
-        $cache_key = 'log_count_' . date('d');
-        $count = Cache::get($cache_key);
-        if (isset($_GET['count']) || $count === false) {
-            $count = $mongo->count(['microtime' => ['$lte' => strtotime('-1 day')]]);
-            Cache::set($cache_key, $count, 0);
-        }
-        //今日日志量
-        $today_count = $mongo->count(['microtime' => ['$gte' => strtotime(date('Y-m-d'))]]);
-        $count += $today_count;
-
         if (!empty($curr_time)) {
             $where['time']['$gte'] = $curr_time . ' 00:00:00';
-        }
-        if (!empty($curr_time)) {
             $where['time']['$lte'] = $curr_time . ' 23:59:59';
         }
-
-        $where['date']['$ne'] = null;
-        $statusArr = [
-            'aggregate' => 'log',
-            'pipeline' => [
-                [
-                    '$project' => [
-                        'project' => 1,
-                        'type' => 1,
-                        'time' => 1,
-                        'date' => [
-                            '$dateToString' => ['format' => '%Y-%m-%d', 'date' => '$date']
-                        ],
-                        'execTime' => '$content.execTime',
-                        'execTime_200' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 0]], ['$lte' => ['$content.execTime', 0.2]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'execTime_500' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 0.2]], ['$lte' => ['$content.execTime', 0.5]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'execTime_1000' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 0.5]], ['$lte' => ['$content.execTime', 1]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'execTime_1000+' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 1]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_200' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 200]], ['$lte' => ['$content.responseCode', 220]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_300' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 300]], ['$lte' => ['$content.responseCode', 320]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_400' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 400]], ['$lte' => ['$content.responseCode', 420]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_500' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 500]], ['$lte' => ['$content.responseCode', 520]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                    ]
-                ],
-                ['$match' => $where],
-                [
-                    '$group' => [
-                        '_id' => [
-                            'date' => '$date',
-                        ],
-                        'count' => ['$sum' => 1],
-                        'time' => ['$avg' => '$execTime'],
-                        'time_200' => ['$sum' => '$execTime_200'],
-                        'time_500' => ['$sum' => '$execTime_500'],
-                        'time_1000' => ['$sum' => '$execTime_1000'],
-                        'time_1000+' => ['$sum' => '$execTime_1000+'],
-                        'code_200' => ['$sum' => '$httpCode_200'],
-                        'code_300' => ['$sum' => '$httpCode_300'],
-                        'code_400' => ['$sum' => '$httpCode_400'],
-                        'code_500' => ['$sum' => '$httpCode_500'],
-                    ]
-                ],
-            ]
-        ];
-        $cache_key = 'log_status_rs_' . md5(serialize($where));
-        $status_rs = Cache::get($cache_key);
-        if ($status_rs === false) {
-            $status_rs = $collection->executeCommand($statusArr);
-            $status_rs = Common::objectToArray($status_rs);
-            Cache::set($cache_key, json_encode($status_rs), 1800);
-        } else {
-            $status_rs = json_decode($status_rs, true);
+        Cache::cut('file');
+        $expire = 1800;
+        if ($curr_time < date('Y-m-d')) {
+            $expire = 0;
         }
-        unset($statusArr);
-
-        $countArr = [
-            'aggregate' => 'log',
-            'pipeline' => [
-                [
-                    '$project' => [
-                        'project' => 1,
-                        'item' => 1,
-                        'url' => '$content.url',
-                        'type' => 1,
-                        'time' => 1,
-                        'date' => [
-                            '$dateToString' => ['format' => '%Y-%m-%d %H', 'date' => '$date']
-                        ],
-                        'execTime' => '$content.execTime',
-                        'httpCode_200' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 200]], ['$lte' => ['$content.responseCode', 320]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'responseCode' => '$content.responseCode',
-                    ]
-                ],
-                ['$match' => $where],
-                [
-                    '$group' => [
-                        '_id' => [
-                            'date' => '$date',
-                        ],
-                        'count' => ['$sum' => 1],
-                        'time' => ['$avg' => '$execTime'],
-                        'code_200' => ['$sum' => '$httpCode_200'],
-                        'min_time' => ['$min' => '$execTime'],
-                        'max_time' => ['$max' => '$execTime'],
-                    ]
-                ],
-                ['$sort' => ['date' => -1]],
-            ]
-        ];
-
-
-        $cache_key = 'log_count_rs_' . md5(serialize($where));
-        $count_rs = Cache::get($cache_key);
-        if ($count_rs === false) {
-            $mongo = new Mongo();
-            $collection = $mongo->selectCollection('log');
-            $count_rs = $collection->executeCommand($countArr);
-            $count_rs = Common::objectToArray($count_rs);
-            Cache::set($cache_key, json_encode($count_rs), 1800);
-        } else {
-            $count_rs = json_decode($count_rs, true);
+        //今日以前的日志总量
+        $cache_key = 'log_count_' . date('d');
+        $count = Cache::get($cache_key);
+        $mongo = (new Mongo())->selectCollection('log');
+        if (isset($_GET['count']) || $count === false) {
+            $count = $mongo->count(['microtime' => ['$lt' => strtotime(date('Y-m-d 0:0:0'))]]);
+            Cache::set($cache_key, $count, 0);
         }
-        unset($countArr);
+
+        //今日日志量
+        $cache_key = 'log_today_count';
+        $today_count = Cache::get($cache_key);
+        if (isset($_GET['count']) || $count === false) {
+            $today_count = $mongo->count(['microtime' => ['$gte' => strtotime(date('Y-m-d 0:0:0'))]]);
+            Cache::set($cache_key, $count, 600);
+        }
+        $count += $today_count;
+        $model = new LogModel();
+
+        //统计状态
+        $status_rs = $model->countStatus($where, $expire, $curr_time);
+        //时间段统计
+        $count_rs = $model->count($where, $expire, $curr_time);
+        //统计错误数
+        $count_error_rs = $model->countError($where, $expire, $curr_time);
 
         $countData = array();
         if (!empty($count_rs[0]['result'])) {
             foreach ($count_rs[0]['result'] as $_count) {
-                $hour = intval(date('H',strtotime($_count['_id']['date'] . ':00')));
+                $hour = intval(date('H', strtotime($_count['_id']['date'] . ':00')));
                 $time[$hour] = $_count['time'];
                 $success[$hour] = $_count['code_200'];
                 $fail[$hour] = $_count['count'] - $success[$hour];
+                $error[$hour] = $_count['error'];
             }
         }
-
         for ($i = 0; $i < 24; $i++) {
-            $countData['count_time'][] =  str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
+            $countData['count_time'][] = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
             $countData['time'][$i] = isset($time[$i]) ? floatval(sprintf('%.2f', ($time[$i] * 1000))) : 0;
             $countData['success'][$i] = isset($success[$i]) ? $success[$i] : 0;
             $countData['fail'][$i] = isset($fail[$i]) ? $fail[$i] : 0;
+            $countData['error'][$i] = isset($error[$i]) ? $error[$i] : 0;
         }
-
         return $this->render('index', [
             'countData' => $countData,
             'statusData' => isset($status_rs[0]['result'][0]) ? $status_rs[0]['result'][0] : null,
             'count' => intval($count),
+
             'today_count' => $today_count,
+            'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
-                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
+                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
+            'projects' => $model->projects,
+            'types' => $model->types,
         ]);
     }
 
@@ -280,6 +125,10 @@ class Index extends Controller
         $_GET['sort'] = $sort;
         $_GET['log_type'] = $log_type;
         $_GET['project'] = $project;
+
+        if (empty($sort)) {
+            $sort = 'time';
+        }
         if ($sort != 'time') {
             $sort = 'content.' . $sort;
         }
@@ -319,8 +168,6 @@ class Index extends Controller
         }
         if (!empty($log_type)) {
             $where['type'] = $log_type;
-        } else {
-            $where['type'] = LOG_TYPE_FINISH;
         }
         if (!empty($request_id)) {
             $where['requestId'] = $request_id;
@@ -340,9 +187,8 @@ class Index extends Controller
         //计算分页
         $page_count = ceil($count / $page_size);
 
-        $rs = $collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size);
-        $rs = Common::objectToArray($rs);
-
+        $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
+        $model = new LogModel();
         return $this->render('just', [
             'rs' => $rs,
             'page' => [
@@ -351,6 +197,8 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
+            'projects' => $model->projects,
+            'types' => $model->types,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
         ]);
@@ -378,7 +226,7 @@ class Index extends Controller
         //traceId排序
         $rs = LogService::traceLogVersionSort($rs);
         $mainRequest = reset($rs);
-        if (!isset($_GET['param'])) {
+        if (!isset($_GET['param']) || Mll::app()->config->params('log_param_close', 'true')) {
             foreach ($rs as $k => $_rs) {
                 $rs[$k]['content']['requestParams'] = '';
             }
@@ -401,13 +249,16 @@ class Index extends Controller
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
-        $page = Mll::app()->request->get('page', 1, 'intval');
-        $page_size = Mll::app()->request->get('limit', 20, 'intval');
+        $page = Mll::app()->request->get('page/d', 1, 'intval');
+        $page_size = Mll::app()->request->get('limit/d', 20, 'intval');
         $project = Mll::app()->request->get('project', 'help');
+        $execTime = Mll::app()->request->get('execTime/f', 1, 'floatval');
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
         $_GET['log_type'] = $log_type;
         $_GET['project'] = $project;
+        $_GET['execTime'] = $execTime;
+
         $where = [];
         if (!empty($project)) {
             $where['project'] = $project;
@@ -426,128 +277,20 @@ class Index extends Controller
         } else {
             $where['type'] = LOG_TYPE_FINISH;
         }
+        $where['content.execTime']['$gt'] = $execTime;
 
         $mongo = new Mongo();
         $collection = $mongo->selectCollection('log');
         $count = $collection->count($where);
+        unset($where['content.execTime']);
+
+        $where['execTime']['$gt'] = $execTime;
         //计算分页
         $page_count = ceil($count / $page_size);
-        $comArr = [
-            'aggregate' => 'log',
-            'pipeline' => [
-                [
-                    '$project' => [
-                        'item' => 1,
-                        'url' => '$content.url',
-                        'type' => 1,
-                        'time' => 1,
-                        'project' => 1,
-                        'execTime' => '$content.execTime',
-                        'execTime_200' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 0]], ['$lte' => ['$content.execTime', 0.2]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'execTime_500' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 0.2]], ['$lte' => ['$content.execTime', 0.5]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'execTime_1000' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 0.5]], ['$lte' => ['$content.execTime', 1]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'execTime_1000+' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gt' => ['$content.execTime', 1]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_200' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 200]], ['$lte' => ['$content.responseCode', 220]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_300' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 300]], ['$lte' => ['$content.responseCode', 320]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_400' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 400]], ['$lte' => ['$content.responseCode', 420]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'httpCode_500' => [
-                            '$cond' => [
-                                'if' => ['$and' => [
-                                    ['$gte' => ['$content.responseCode', 500]], ['$lte' => ['$content.responseCode', 520]]
-                                ]],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
-                        'responseCode' => '$content.responseCode',
-                    ]
-                ],
-                ['$match' => $where],
-                [
-                    '$group' => [
-                        '_id' => [
-                            'url' => '$url',
-                        ],
-                        'count' => ['$sum' => 1],
-                        'type' => ['$first' => '$type'],
-                        'time' => ['$avg' => '$execTime'],
-                        'time_200' => ['$sum' => '$execTime_200'],
-                        'time_500' => ['$sum' => '$execTime_500'],
-                        'time_1000' => ['$sum' => '$execTime_1000'],
-                        'time_1000+' => ['$sum' => '$execTime_1000+'],
-                        'code_200' => ['$sum' => '$httpCode_200'],
-                        'code_300' => ['$sum' => '$httpCode_300'],
-                        'code_400' => ['$sum' => '$httpCode_400'],
-                        'code_500' => ['$sum' => '$httpCode_500'],
-                        'http_code' => ['$addToSet' => '$responseCode'],
-                        'min_time' => ['$min' => '$execTime'],
-                        'max_time' => ['$max' => '$execTime'],
-                    ]
-                ],
-                ['$sort' => ['time' => -1]],
-                ['$skip' => ($page - 1) * $page_size],
-                ['$limit' => $page_size]
-            ],
-        ];
-        $rs = $collection->executeCommand($comArr);
-        unset($comArr);
-        $rs = Common::objectToArray($rs);
+
+        $model = new LogModel();
+        $rs = Common::objectToArray($model->countRank($where, $page, $page_size));
+
         return $this->render('rank', [
             'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
             'page' => [
@@ -556,6 +299,8 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
+            'projects' => $model->projects,
+            'types' => $model->types,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
         ]);

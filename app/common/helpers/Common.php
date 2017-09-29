@@ -52,4 +52,20 @@ class Common
         return $versionArr;
     }
 
+    /**
+     * 拼装html select option
+     *
+     * @param array $arr 数组
+     * @param $select
+     * @return string
+     */
+    public static function optionHtml($arr, $select)
+    {
+        $html = '';
+        foreach ($arr as $k => $v) {
+            $selectStr = (isset($_GET[$select]) && $_GET[$select] == $k ? 'selected="selected"' : '');
+            $html .= '<option ' . $selectStr . ' value="' . $k . '">' . $v . '</option>';
+        }
+        return $html;
+    }
 }

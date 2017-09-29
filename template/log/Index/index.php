@@ -1,4 +1,8 @@
-<?php include(__DIR__ . '/../common/header.php') ?>
+<?php
+use app\common\helpers\Common;
+
+include(__DIR__ . '/../common/header.php')
+?>
 <?php include(__DIR__ . '/../common/nav.php') ?>
 <div class="container-fluid theme-showcase" role="main">
     <div class="row">
@@ -21,9 +25,7 @@
                 <div class="form-group" style="margin-left: 10px">
                     <label>项目：</label>
                     <select name="project" class="form-control">
-                        <option <?= isset($_GET['project']) && $_GET['project'] == 'help' ? 'selected="selected"' : ''?> value="help">HELP</option>
-                        <option <?= isset($_GET['project']) && $_GET['project'] == 'mll' ? 'selected="selected"' : ''?> value="mll">MLL</option>
-                        <option <?= isset($_GET['project']) && $_GET['project'] == 'common' ? 'selected="selected"' : ''?> value="common">COMMON</option>
+                        <?= Common::optionHtml($projects, 'project');?>
                     </select>
                 </div>
                 <div class="form-group" style="margin-left: 10px">
@@ -35,18 +37,7 @@
                     <label>日志类型：</label>
                     <select name="log_type" class="form-control">
                         <option value="">请选择</option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'RULE' ? 'selected="selected"' : '' ?>
-                                value="RULE">规则
-                        </option>
-                       <!-- <option <?/*= isset($_GET['log_type']) && $_GET['log_type'] == 'RPC' ? 'selected="selected"' : '' */?>
-                                value="RPC">RPC
-                        </option>-->
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'REQUEST' ? 'selected="selected"' : '' ?>
-                                value="REQUEST">请求
-                        </option>
-                        <option <?= isset($_GET['log_type']) && $_GET['log_type'] == 'CURL' ? 'selected="selected"' : '' ?>
-                                value="CURL">接口
-                        </option>
+                        <?= Common::optionHtml($types, 'log_type');?>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-default" style="margin-left: 10px">搜索</button>
@@ -55,11 +46,41 @@
         </div>
         <div class="col-md-12">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div id="http" style="min-width:250px;height:250px;"></div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div id="exec_time" style="min-width:250px;height:250px;"></div>
+                </div>
+                <div class="col-md-4">
+                    <h4>报错统计</h4>
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>记录次数</th>
+                            <th>错误次数</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        if (isset($count_error)) {
+                            foreach ($count_error as $v) {
+                                ?>
+                                <tr>
+                                    <td><?= isset($types[$v['_id']['type']]) ? $types[$v['_id']['type']] : ''?></td>
+                                    <td><?= $v['count']?></td>
+                                    <td>
+                                        <a style="<?= $v['error'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>log_level=error&log_type=<?= $v['_id']['type']?>"><?= $v['error']?></a>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -157,6 +178,16 @@
                     yAxis: 1,
                     color: '#FF9326',
                     data: <?= json_encode($countData['fail']) ?>,
+                    tooltip: {
+                        valueSuffix: ' '
+                    }
+                },
+                {
+                    name: '错误消息',
+                    type: 'column',
+                    yAxis: 1,
+                    color: '#d9534f',
+                    data: <?= json_encode($countData['error']) ?>,
                     tooltip: {
                         valueSuffix: ' '
                     }
