@@ -20,7 +20,6 @@ class Parse extends Controller
         }
     }
 
-
     public function count()
     {
         echo 'ok';
@@ -52,7 +51,7 @@ class Parse extends Controller
         $cache_key = 'log_count_' . date('d');
         $count = Cache::get($cache_key);
         if (isset($_GET['count']) || $count === false) {
-            $count = $mongo->count(['microtime' => ['$lt' => strtotime(date('Y-m-d'))]]);
+            $count = $mongo->count(['microtime' => ['$lt' => strtotime(date('Y-m-d 0:0:0'))]]);
             Cache::set($cache_key, $count, 0);
         }
         if (!empty($curr_time)) {

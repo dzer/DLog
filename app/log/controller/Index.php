@@ -2,6 +2,7 @@
 
 namespace app\log\controller;
 
+use app\log\model\LogCountHourModel;
 use app\log\model\LogModel;
 use app\log\service\LogService;
 use Mll\Cache;
@@ -58,15 +59,16 @@ class Index extends Controller
         //今日日志量
         $cache_key = 'log_today_count';
         $today_count = Cache::get($cache_key);
-        if (isset($_GET['count']) || $count === false) {
+        if (isset($_GET['count']) || $today_count === false) {
             $today_count = $mongo->count(['microtime' => ['$gte' => strtotime(date('Y-m-d 0:0:0'))]]);
-            Cache::set($cache_key, $count, 600);
+            Cache::set($cache_key, $today_count, 600);
         }
         $count += $today_count;
         $model = new LogModel();
 
         //统计状态
         $status_rs = $model->countStatus($where, $expire, $curr_time);
+
         //时间段统计
         $count_rs = $model->count($where, $expire, $curr_time);
         //统计错误数
@@ -94,6 +96,72 @@ class Index extends Controller
             'statusData' => isset($status_rs[0]['result'][0]) ? $status_rs[0]['result'][0] : null,
             'count' => intval($count),
 
+            'today_count' => $today_count,
+            'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
+            'base_url' => '/' . Mll::app()->request->getModule()
+                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
+            'projects' => $model->projects,
+            'types' => $model->types,
+        ]);
+    }
+
+    public function index2()
+    {
+        $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
+        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
+        $project = Mll::app()->request->get('project', 'mll');
+        $_GET['curr_time'] = $curr_time;
+        $_GET['log_type'] = $log_type;
+        $_GET['project'] = $project;
+
+        $where = [];
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        }
+        if (!empty($project)) {
+            $where['project'] = $project;
+        }
+        if (!empty($curr_time)) {
+            $where['date'] = $curr_time;
+        }
+        Cache::cut('file');
+        $expire = 60;
+        if ($curr_time < date('Y-m-d')) {
+            $expire = 0;
+        }
+        //今日以前的日志总量
+        $cache_key = 'log_count_' . date('d');
+        $count = Cache::get($cache_key);
+        $logCountModel = new LogCountHourModel();
+
+        if (isset($_GET['count']) || $count === false) {
+            $count = $logCountModel->sumField('$count', ['date' => ['$lt' => date('Y-m-d')], null]);
+            $count = isset($count['count']) ? $count['count'] : 0;
+            Cache::set($cache_key, $count, 0);
+        }
+
+        //今日日志量
+        $today_count = $logCountModel->sumField('$count', ['date' => ['$gte' => date('Y-m-d')], null]);
+        $today_count = isset($today_count['count']) ? $today_count['count'] : 0;
+
+        $count += $today_count;
+        $model = new LogModel();
+
+        //统计状态
+        $status_rs = $logCountModel->countStatus($where, $expire, $curr_time);
+
+        //时间段统计
+        $countData = $logCountModel->countByHour($where, $expire, $curr_time);
+        echo json_encode($countData);die;
+
+
+        //统计错误数
+        $count_error_rs = $model->countError($where, $expire, $curr_time);
+
+        return $this->render('index2', [
+            'countData' => $countData,
+            'statusData' => isset($status_rs[0]['result'][0]) ? $status_rs[0]['result'][0] : null,
+            'count' => intval($count),
             'today_count' => $today_count,
             'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
@@ -226,7 +294,7 @@ class Index extends Controller
         //traceId排序
         $rs = LogService::traceLogVersionSort($rs);
         $mainRequest = reset($rs);
-        if (!isset($_GET['param']) || Mll::app()->config->params('log_param_close', 'true')) {
+        if (!isset($_GET['param']) && Mll::app()->config->params('log_param_close', 'true')) {
             foreach ($rs as $k => $_rs) {
                 $rs[$k]['content']['requestParams'] = '';
             }

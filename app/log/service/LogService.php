@@ -95,27 +95,93 @@ class LogService
             $logs[] = $msg;
         }
         //分析日志并存储
+        $insertNum = $updateNum = 0;
         if (!empty($logs)) {
-            $logArr = [];
-            foreach ($logs as $log) {
-                $log = json_decode($log, true);
-                if (!empty($log)) {
-                    $orig_date = new \DateTime($log['time']);
-                    if (!isset($log['content']['url'])) {
-                        $log['content']['url'] = '?';
-                    }
-                    $log['content']['url'] = strlen($log['content']['url']) > 1000 ?
-                        substr($log['content']['url'], 0, 1000) : $log['content']['url'];
-                    $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
-                    $logArr[] = $log;
+            $logArr = self::countLogByHour($logs);
+            unset($logs);
+
+            $mongo = new Mongo();
+            $insertNum = $mongo->selectCollection('log')->batchInsert($logArr['log']);
+            if ($insertNum == 0) {
+                Mll::app()->log->warning(
+                    date('Y-m-d H:i:s') . 'mongo 插入失败' . count($logArr['log']) . '条！'
+                );
+            }
+            if (!empty($logArr['countHour'])) {
+                Mll::app()->log->debug($logArr['countHour']);
+                $mongo->selectCollection('log_count_hour');
+                foreach ($logArr['countHour'] as $k => $v) {
+                    $where = explode('#', $k);
+
+                    $updateNum = $mongo->update(
+                        ['date' => $where[0], 'hour' => $where[1], 'project' => $where[2], 'type' => $where[3]],
+                        [
+                            '$inc' => $v['inc'],
+                            '$set' => $v['set']
+                        ],
+                        ['upsert' => true]
+                    );
                 }
             }
-            unset($logs);
-            $mongo = new Mongo();
-            return $mongo->selectCollection('log')->batchInsert($logArr);
         }
-        return true;
+        return 'inc:' . $insertNum . ', update:' . $updateNum;
     }
+
+    public static function countLogByHour($logs)
+    {
+        $logArr = $countHour = [];
+        foreach ($logs as $log) {
+            $log = json_decode($log, true);
+            if (!empty($log)) {
+                $orig_date = new \DateTime($log['time']);
+                if (!isset($log['content']['url'])) {
+                    $log['content']['url'] = '?';
+                }
+                $log['content']['url'] = strlen($log['content']['url']) > 1000 ?
+                    substr($log['content']['url'], 0, 1000) : $log['content']['url'];
+                $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
+
+                $date = date('Y-m-d', intval($log['microtime']));
+                $hour = date('H', intval($log['microtime']));
+                $key = "{$date}#{$hour}#{$log['project']}#{$log['type']}";
+                $countHour[$key]['set'] = [
+                    'date' => $date,
+                    'hour' => $hour,
+                    'project' => $log['project'],
+                    'type' => $log['type']
+                ];
+                $countHour[$key]['inc']['count'] += 1;
+                $countHour[$key]['inc']['execTime'] += $log['content']['execTime'];
+                $countHour[$key]['inc']['level_' . $log['level']] += 1;
+                if (is_numeric($log['content']['responseCode']) && $log['content']['responseCode'] == 0) {
+                    $countHour[$key]['inc']['httpCode_0'] += 1;
+                } elseif ($log['content']['responseCode'] >= 200 && $log['content']['responseCode'] < 300) {
+                    $countHour[$key]['inc']['httpCode_200'] += 1;
+                } elseif ($log['content']['responseCode'] >= 300 && $log['content']['responseCode'] < 400) {
+                    $countHour[$key]['inc']['httpCode_300'] += 1;
+                } elseif ($log['content']['responseCode'] >= 400 && $log['content']['responseCode'] < 500) {
+                    $countHour[$key]['inc']['httpCode_400'] += 1;
+                } elseif ($log['content']['responseCode'] >= 500 && $log['content']['responseCode'] < 600) {
+                    $countHour[$key]['inc']['httpCode_500'] += 1;
+                }
+
+                if ($log['content']['execTime'] <= 0.2) {
+                    $countHour[$key]['inc']['execTime_200'] += 1;
+                } elseif ($log['content']['execTime'] > 0.2 && $log['content']['execTime'] <= 0.5) {
+                    $countHour[$key]['inc']['execTime_500'] += 1;
+                } elseif ($log['content']['execTime'] > 0.5 && $log['content']['execTime'] <= 1) {
+                    $countHour[$key]['inc']['execTime_1000'] += 1;
+                } elseif ($log['content']['execTime'] > 1 && $log['content']['execTime'] <= 5) {
+                    $countHour[$key]['inc']['execTime_5000'] += 1;
+                } else {
+                    $countHour[$key]['inc']['execTime_5000+'] += 1;
+                }
+                $logArr[] = $log;
+            }
+        }
+        return ['log' => $logArr, 'countHour' => $countHour];
+    }
+
 
     /**
      * 跟踪日志按版本排序
