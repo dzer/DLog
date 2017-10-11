@@ -78,7 +78,10 @@
                 <a type="submit" href="<?= $base_url ?>" class="btn btn-default" style="margin: 10px 10px 0 0">重置</a>
             </form>
         </div>
-        <div class="col-md-12" style="margin-top: 15px">
+        <div class="col-md-12" style="margin-top: 5px">
+            <nav aria-label="Page navigation" class="pull-right">
+                <div class="pagination" style="line-height: 34px; float: left; margin: 0;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
+            </nav>
             <table class="table table-striped">
                 <thead>
                 <tr>

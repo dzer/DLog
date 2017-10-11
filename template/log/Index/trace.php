@@ -152,7 +152,7 @@
         console.log(rs);
         function showData(id) {
             var str = '<tr><td>Time</td> <td>' + rs[id]['time'] + '</td></tr>'
-                +'<tr><td>URL</td><td>' + rs[id]['content']['url'] + '</td></tr><tr>'
+                +'<tr><td>URL</td><td style="word-break: break-all">' + rs[id]['content']['url'] + '</td></tr><tr>'
                 +'<tr><td>Method</td><td>' + rs[id]['content']['method'] + '</td></tr><tr>'
                 +'<tr><td>请求参数</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestParams'])) + '</pre></td></tr><tr>'
                 +'<tr><td>超时时间</td><td>' + rs[id]['content']['timeout'] + 's</td></tr><tr>'

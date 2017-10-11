@@ -11,6 +11,7 @@ class LogModel extends Model
 {
 
     public $projects = [
+        'all' => '所有项目',
         'mll' => 'MLL',
         'zx' => 'ZX',
         'help' => 'HELP',

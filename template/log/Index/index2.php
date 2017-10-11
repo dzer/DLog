@@ -12,8 +12,8 @@ include(__DIR__ . '/../common/header.php')
                 <tbody>
                 <tr style="font-weight: 600; font-size: 18px; text-align: center">
                     <td date_today="<?= $today_count ?>">总日志数：<?= $count ?></td>
-                    <td>今日调用次数: <?= $statusData['count']?></td>
-                    <td>今日平均执行时间: <?= sprintf('%.1f', ($statusData['execTimeSum']/$statusData['count']) * 1000)?> ms</td>
+                    <td>今日记录次数: <?= $statusData['count']?></td>
+                    <td>今日平均执行时间: <?= sprintf('%.1f', ($statusData['count'] > 0 ? ($statusData['execTimeSum']/$statusData['count']) * 1000 : '')) ?> ms</td>
                 </tr>
                 </tbody>
             </table>
@@ -59,7 +59,9 @@ include(__DIR__ . '/../common/header.php')
                         <tr>
                             <th>类型</th>
                             <th>记录次数</th>
-                            <th>错误次数</th>
+                            <th>ERROR</th>
+                            <th>WARNING</th>
+                            <th>NOTICE</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -72,7 +74,15 @@ include(__DIR__ . '/../common/header.php')
                                     <td><?= $v['count']?></td>
                                     <td>
                                         <a style="<?= $v['error'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
-                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>log_level=error&log_type=<?= $v['_id']['type']?>"><?= $v['error']?></a>
+                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=error&log_type=<?= $v['_id']['type']?>"><?= $v['error']?></a>
+                                    </td>
+                                    <td>
+                                        <a style="<?= $v['warning'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=warning&log_type=<?= $v['_id']['type']?>"><?= $v['warning']?></a>
+                                    </td>
+                                    <td>
+                                        <a style="<?= $v['notice'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=notice&log_type=<?= $v['_id']['type']?>"><?= $v['notice']?></a>
                                     </td>
                                 </tr>
                                 <?php
@@ -302,9 +312,10 @@ include(__DIR__ . '/../common/header.php')
                     },
                     ['200~500ms', <?= intval($statusData['time_500'])?>],
                     ['500~1000ms', <?= intval($statusData['time_1000'])?>],
+                    ['1s~5s', <?= intval($statusData['time_5000'])?>],
                     {
-                        name: '1000ms+',
-                        y: <?= intval($statusData['time_1000+'])?>,
+                        name: '5s+',
+                        y: <?= intval($statusData['time_5000+'])?>,
                         selected: true
                     }
                 ]

@@ -22,11 +22,11 @@ class Index extends Controller
         }
     }
 
-    public function index()
+    public function index2()
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
-        $project = Mll::app()->request->get('project', 'mll');
+        $project = Mll::app()->request->get('project', 'all');
         $_GET['curr_time'] = $curr_time;
         $_GET['log_type'] = $log_type;
         $_GET['project'] = $project;
@@ -105,11 +105,11 @@ class Index extends Controller
         ]);
     }
 
-    public function index2()
+    public function index()
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
-        $project = Mll::app()->request->get('project', 'mll');
+        $project = Mll::app()->request->get('project', 'all');
         $_GET['curr_time'] = $curr_time;
         $_GET['log_type'] = $log_type;
         $_GET['project'] = $project;
@@ -118,7 +118,7 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
-        if (!empty($project)) {
+        if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
         }
         if (!empty($curr_time)) {
@@ -152,11 +152,9 @@ class Index extends Controller
 
         //时间段统计
         $countData = $logCountModel->countByHour($where, $expire, $curr_time);
-        echo json_encode($countData);die;
-
 
         //统计错误数
-        $count_error_rs = $model->countError($where, $expire, $curr_time);
+        $count_error_rs = $logCountModel->countError($where, $expire, $curr_time);
 
         return $this->render('index2', [
             'countData' => $countData,
@@ -186,7 +184,7 @@ class Index extends Controller
         $request_id = Mll::app()->request->get('request_id');
         $execTime = Mll::app()->request->get('execTime');
         $page = Mll::app()->request->get('page', 1, 'intval');
-        $page_size = Mll::app()->request->get('limit', 20, 'intval');
+        $page_size = Mll::app()->request->get('limit', 40, 'intval');
         $sort = Mll::app()->request->get('sort', 'time');
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
@@ -201,7 +199,7 @@ class Index extends Controller
             $sort = 'content.' . $sort;
         }
         $where = [];
-        if (!empty($project)) {
+        if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
         }
         if (!empty($start_time)) {
@@ -254,7 +252,6 @@ class Index extends Controller
         $count = $collection->count($where);
         //计算分页
         $page_count = ceil($count / $page_size);
-
         $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
         $model = new LogModel();
         return $this->render('just', [
