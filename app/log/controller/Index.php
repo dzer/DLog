@@ -68,7 +68,6 @@ class Index extends Controller
 
         //统计状态
         $status_rs = $model->countStatus($where, $expire, $curr_time);
-
         //时间段统计
         $count_rs = $model->count($where, $expire, $curr_time);
         //统计错误数
@@ -110,6 +109,7 @@ class Index extends Controller
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
         $project = Mll::app()->request->get('project', 'all');
+
         $_GET['curr_time'] = $curr_time;
         $_GET['log_type'] = $log_type;
         $_GET['project'] = $project;
@@ -166,6 +166,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'projects' => $model->projects,
             'types' => $model->types,
+            'servers' => $model->servers,
         ]);
     }
 
@@ -174,8 +175,8 @@ class Index extends Controller
      */
     public function just()
     {
-        $project = Mll::app()->request->get('project', 'help');
-        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
+        $project = Mll::app()->request->get('project', 'all');
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d H:00:00', time() - 4 * 3600));
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_level = Mll::app()->request->get('log_level');
@@ -186,6 +187,7 @@ class Index extends Controller
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 40, 'intval');
         $sort = Mll::app()->request->get('sort', 'time');
+        $server = Mll::app()->request->get('server');
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
         $_GET['sort'] = $sort;
@@ -201,6 +203,9 @@ class Index extends Controller
         $where = [];
         if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
+        }
+        if (!empty($server)) {
+            $where['server'] = $server;
         }
         if (!empty($start_time)) {
             $where['time']['$gte'] = $start_time;
@@ -219,7 +224,6 @@ class Index extends Controller
                     break;
                 case '1000':
                     $where['content.execTime']['$gt'] = 0.5;
-                    $where['content.execTime']['$lte'] = 1;
                     break;
                 case '1000+':
                     $where['content.execTime']['$gt'] = 1;
@@ -249,21 +253,25 @@ class Index extends Controller
 
         $mongo = new Mongo();
         $collection = $mongo->selectCollection('log');
-        $count = $collection->count($where);
-        //计算分页
-        $page_count = ceil($count / $page_size);
-        $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
         $model = new LogModel();
+        //echo json_encode($where);
+        //$count = $model->countNum($where);
+
+        //计算分页
+        //$page_count = ceil($count / $page_size);
+        $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
+
         return $this->render('just', [
             'rs' => $rs,
             'page' => [
                 'page' => $page,
                 'page_size' => $page_size,
-                'page_count' => $page_count,
-                'count' => $count
+                //'page_count' => $page_count,
+                //'count' => $count
             ],
             'projects' => $model->projects,
             'types' => $model->types,
+            'servers' => $model->servers,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
         ]);

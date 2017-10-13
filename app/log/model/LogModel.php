@@ -12,6 +12,7 @@ class LogModel extends Model
 
     public $projects = [
         'all' => '所有项目',
+        'common' => 'COMMON',
         'mll' => 'MLL',
         'zx' => 'ZX',
         'help' => 'HELP',
@@ -34,6 +35,13 @@ class LogModel extends Model
         'MQ' => 'MQ',
         'MEMCACHE' => '缓存',
         'SYSTEM' => '系统',
+    ];
+
+    public $servers = [
+        'web_php_04' => 'web_php_04',
+        'web_php_07' => 'web_php_07',
+        'web_php_08' => 'web_php_08',
+        'web_php_13' => 'web_php_13',
     ];
 
 
@@ -414,6 +422,83 @@ class LogModel extends Model
             $count_rs = json_decode($count_rs, true);
         }
         return $count_rs;
+    }
 
+    /**
+     * 统计最近几分钟的日志
+     *
+     * @param array $where
+     * @return array|mixed|object
+     */
+    public function countByForewarning(array $where)
+    {
+        $countArr = [
+            'aggregate' => 'log',
+            'pipeline' => [
+                [
+                    '$project' => [
+                        'project' => 1,
+                        'type' => 1,
+                        'error' => [
+                            '$cond' => [
+                                'if' => ['$eq' => ['$level', 'error']],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'level' => 1,
+                        'time' => 1,
+                        'execTime' => '$content.execTime',
+                    ]
+                ],
+                ['$match' => $where],
+                [
+                    '$group' => [
+                        '_id' => null,
+                        'count' => ['$sum' => 1],
+                        'error' => ['$sum' => '$error'],
+                        'time' => ['$avg' => '$execTime'],
+                    ]
+                ],
+            ]
+        ];
+
+        $mongo = new Mongo();
+
+        return Common::objectToArray($mongo->executeCommand($countArr));
+    }
+
+    public function countNum($where)
+    {
+        $countArr = [
+            'aggregate' => 'log',
+            'pipeline' => [
+                [
+                    '$project' => [
+                        'url' => '$content.url',
+                        'type' => 1,
+                        'time' => 1,
+                        'project' => 1,
+                        'execTime' => '$content.execTime',
+                        'responseCode' => '$content.responseCode',
+                        'requestId' => 1,
+                        'level' => 1
+                    ]
+                ],
+                ['$match' => $where],
+                [
+                    '$group' => [
+                        '_id' => null,
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ]
+        ];
+
+        $mongo = new Mongo();
+        $count_rs = $mongo->executeCommand($countArr);
+
+        $count_rs = Common::objectToArray($count_rs);
+        return isset($count_rs[0]['result'][0]['count']) ? $count_rs[0]['result'][0]['count'] : null;
     }
 }

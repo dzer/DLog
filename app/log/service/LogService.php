@@ -5,41 +5,11 @@ namespace app\log\service;
 use app\common\helpers\Common;
 use Mll\Common\Amqp;
 use Mll\Cache;
-use Mll\Common\MemcacheQueue;
 use Mll\Db\Mongo;
 use Mll\Mll;
 
 class LogService
 {
-
-    /**
-     * 从队列取出日志并存储
-     *
-     * @param int $num 日志条数
-     * @return array|bool
-     */
-    public static function pullLogByCache($num = 1000)
-    {
-        $config = Mll::app()->config->get('log.cache');
-
-        $queue = new MemcacheQueue($config['cache_server'], $config['queue_name'], $config['expire']);
-        $logs = $queue->get($num);
-
-        //分析日志并存储
-        if (!empty($logs)) {
-            $logArr = [];
-            foreach ($logs as $log) {
-                if (!empty($log)) {
-                    $logArr = array_merge($logArr, json_decode($log, true));
-                }
-            }
-            $mongo = new Mongo();
-            $mongo->selectCollection('log')
-                ->batchInsert($logArr);
-        }
-        return true;
-    }
-
     /**
      * 从文件取出日志并存储
      *
@@ -94,6 +64,7 @@ class LogService
             }
             $logs[] = $msg;
         }
+        //Mll::app()->log->debug('mq:' . (time() - $start_time));
         //分析日志并存储
         $insertNum = $updateNum = 0;
         if (!empty($logs)) {
@@ -101,7 +72,9 @@ class LogService
             unset($logs);
 
             $mongo = new Mongo();
+            $start_time = time();
             $insertNum = $mongo->selectCollection('log')->batchInsert($logArr['log']);
+            Mll::app()->log->debug('mongo:' . (time() - $start_time));
             if ($insertNum == 0) {
                 Mll::app()->log->warning(
                     date('Y-m-d H:i:s') . 'mongo 插入失败' . count($logArr['log']) . '条！'

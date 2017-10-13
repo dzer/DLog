@@ -51,7 +51,7 @@
                         <option value="">请选择</option>
                         <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '200' ? 'selected="selected"' : ''?> value="200">0~200ms</option>
                         <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '500' ? 'selected="selected"' : ''?> value="500">200~500ms</option>
-                        <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1000' ? 'selected="selected"' : ''?> value="1000">500~1000ms</option>
+                        <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1000' ? 'selected="selected"' : ''?> value="1000">500ms+</option>
                         <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1000+' ? 'selected="selected"' : ''?> value="1000+">1000ms+</option>
                     </select>
                 </div>
@@ -63,6 +63,13 @@
                         <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '400' ? 'selected="selected"' : ''?> value="400">400</option>
                         <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '500' ? 'selected="selected"' : ''?> value="500">500</option>
                         <option <?= isset($_GET['responseCode']) && $_GET['responseCode'] == '0' ? 'selected="selected"' : ''?> value="0">0</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 10px 10px 0 0">
+                    <label>服务器：</label>
+                    <select name="server" class="form-control">
+                        <option value="">请选择</option>
+                        <?= \app\common\helpers\Common::optionHtml($servers, 'server');?>
                     </select>
                 </div>
                 <div class="form-group" style="margin: 10px 10px 0 0">
@@ -79,9 +86,6 @@
             </form>
         </div>
         <div class="col-md-12" style="margin-top: 5px">
-            <nav aria-label="Page navigation" class="pull-right">
-                <div class="pagination" style="line-height: 34px; float: left; margin: 0;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
-            </nav>
             <table class="table table-striped">
                 <thead>
                 <tr>
@@ -146,7 +150,7 @@
                 </tbody>
             </table>
             <nav aria-label="Page navigation" class="pull-right">
-                <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
+                <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;"> 当前第 <?= $page['page']?>页</div>
                 <ul class="pagination">
                     <?php
                         if (!empty($page)) {
@@ -160,13 +164,6 @@
                                 </li>
                                 <?php
                             }
-                            for ($i = max(1, $page['page'] - 5); $i <= min($page['page'] + 5, $page['page_count']); $i++) {
-                                $_GET['page'] = $i;
-                                ?>
-                                <li <?= $page['page'] == $i ? 'class="active"' : ''?>><a href="<?= $base_url . '?' . http_build_query($_GET);?>"><?= $i ?></a></li>
-                                <?php
-                            }
-                            if ($page['page'] < $page['page_count']) {
                                 $_GET['page'] = $page['page'] + 1;
                                 ?>
                                 <li>
@@ -175,7 +172,6 @@
                                     </a>
                                 </li>
                                 <?php
-                            }
                         }
                     ?>
                 </ul>
