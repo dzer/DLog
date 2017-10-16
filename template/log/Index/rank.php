@@ -34,7 +34,7 @@
                     <div class="form-group" style="margin-left: 10px">
                         <label>执行时间：</label>
                         <select name="execTime" class="form-control">
-                            <option value="">请选择</option>
+                            <option value="0">请选择</option>
                             <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '0.5' ? 'selected="selected"' : ''?> value="0.5">大于500ms</option>
                             <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '1' ? 'selected="selected"' : ''?> value="1">大于1s</option>
                             <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '5' ? 'selected="selected"' : ''?> value="5">大于5s</option>

@@ -17,10 +17,10 @@ class Parse extends Controller
 {
     public function pull()
     {
-        $num = isset($_GET['num']) ? intval($_GET['num']) : 20000;
+        $num = isset($_GET['num']) ? intval($_GET['num']) : 50000;
         //获取缓存中日志数据并存储
-        for ($i = intval($num / 2000); $i > 0; $i--) {
-            echo LogService::pullLogByMq(2000) . '<br>';
+        for ($i = intval($num / 10000); $i > 0; $i--) {
+            echo LogService::pullLogByMq(10000) . '<br>';
         }
     }
 }

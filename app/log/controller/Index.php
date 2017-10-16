@@ -99,7 +99,7 @@ class Index extends Controller
             'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
-            'projects' => $model->projects,
+            'projects' => $model->getProjects(),
             'types' => $model->types,
         ]);
     }
@@ -107,7 +107,7 @@ class Index extends Controller
     public function index()
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
-        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
+        $log_type = Mll::app()->request->get('log_type');
         $project = Mll::app()->request->get('project', 'all');
 
         $_GET['curr_time'] = $curr_time;
@@ -164,7 +164,7 @@ class Index extends Controller
             'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
-            'projects' => $model->projects,
+            'projects' => $model->getProjects(),
             'types' => $model->types,
             'servers' => $model->servers,
         ]);
@@ -176,7 +176,7 @@ class Index extends Controller
     public function just()
     {
         $project = Mll::app()->request->get('project', 'all');
-        $start_time = Mll::app()->request->get('start_time', date('Y-m-d H:00:00', time() - 4 * 3600));
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d H:00:00', time() - 3600));
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_level = Mll::app()->request->get('log_level');
@@ -255,7 +255,7 @@ class Index extends Controller
         $collection = $mongo->selectCollection('log');
         $model = new LogModel();
         //echo json_encode($where);
-        //$count = $model->countNum($where);
+        //$count = $mongo->count($where);
 
         //计算分页
         //$page_count = ceil($count / $page_size);
@@ -269,7 +269,114 @@ class Index extends Controller
                 //'page_count' => $page_count,
                 //'count' => $count
             ],
-            'projects' => $model->projects,
+            'projects' => $model->getProjects(),
+            'types' => $model->types,
+            'servers' => $model->servers,
+            'base_url' => '/' . Mll::app()->request->getModule()
+                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
+        ]);
+    }
+
+    /**
+     * 最近访问
+     */
+    public function just2()
+    {
+        $project = Mll::app()->request->get('project', 'all');
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d H:00:00', time() - 1 * 3600));
+        $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
+        $request_url = Mll::app()->request->get('request_url');
+        $log_level = Mll::app()->request->get('log_level');
+        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
+        $responseCode = Mll::app()->request->get('responseCode');
+        $request_id = Mll::app()->request->get('request_id');
+        $execTime = Mll::app()->request->get('execTime');
+        $page = Mll::app()->request->get('page', 1, 'intval');
+        $page_size = Mll::app()->request->get('limit', 40, 'intval');
+        $sort = Mll::app()->request->get('sort', 'time');
+        $server = Mll::app()->request->get('server');
+        $_GET['start_time'] = $start_time;
+        $_GET['end_time'] = $end_time;
+        $_GET['sort'] = $sort;
+        $_GET['log_type'] = $log_type;
+        $_GET['project'] = $project;
+
+        if (empty($sort)) {
+            $sort = 'time';
+        }
+        if ($sort != 'time') {
+            $sort = 'content.' . $sort;
+        }
+        $where = [];
+        if (!empty($project) && $project != 'all') {
+            $where['project'] = $project;
+        }
+        if (!empty($server)) {
+            $where['server'] = $server;
+        }
+        if (!empty($start_time)) {
+            $where['time']['$gte'] = $start_time;
+        }
+        if (!empty($end_time)) {
+            $where['time']['$lte'] = $end_time;
+        }
+        if (!empty($execTime)) {
+            switch ($execTime) {
+                case '200':
+                    $where['content.execTime']['$lte'] = 0.2;
+                    break;
+                case '500':
+                    $where['content.execTime']['$gt'] = 0.2;
+                    $where['content.execTime']['$lte'] = 0.5;
+                    break;
+                case '1000':
+                    $where['content.execTime']['$gt'] = 0.5;
+                    break;
+                case '1000+':
+                    $where['content.execTime']['$gt'] = 1;
+                    break;
+            }
+        }
+        if (!empty($request_url)) {
+            $where['content.url']['$regex'] = preg_quote(trim($request_url));
+        }
+        if (!empty($log_level)) {
+            $where['level'] = $log_level;
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        }
+        if (!empty($request_id)) {
+            $where['requestId'] = $request_id;
+        }
+        if (is_numeric($responseCode)) {
+            if ($responseCode > 0) {
+                $where['content.responseCode']['$gte'] = intval($responseCode);
+                $where['content.responseCode']['$lte'] = intval($responseCode) + 20;
+            } else {
+                $where['content.responseCode']['$eq'] = $responseCode;
+            }
+        }
+
+        $mongo = new Mongo();
+        $collection = $mongo->selectCollection('log');
+        $model = new LogModel();
+        //echo json_encode($where);
+        $count = $mongo->count($where);
+
+        //计算分页
+        $page_count = ceil($count / $page_size);
+        $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
+
+        return $this->render('just2', [
+            'rs' => $rs,
+            'page' => [
+                'page' => $page,
+                'page_size' => $page_size,
+                'page_count' => $page_count,
+                'count' => $count
+            ],
+            'projects' => $model->getProjects(),
             'types' => $model->types,
             'servers' => $model->servers,
             'base_url' => '/' . Mll::app()->request->getModule()
@@ -318,14 +425,14 @@ class Index extends Controller
      */
     public function rank()
     {
-        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'), '-10 day');
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
         $page = Mll::app()->request->get('page/d', 1, 'intval');
         $page_size = Mll::app()->request->get('limit/d', 20, 'intval');
         $project = Mll::app()->request->get('project', 'help');
-        $execTime = Mll::app()->request->get('execTime/f', 1, 'floatval');
+        $execTime = Mll::app()->request->get('execTime/f', 5, 'floatval');
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
         $_GET['log_type'] = $log_type;
@@ -372,7 +479,7 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
-            'projects' => $model->projects,
+            'projects' => $model->getProjects(),
             'types' => $model->types,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()

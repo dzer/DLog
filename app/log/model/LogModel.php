@@ -44,6 +44,50 @@ class LogModel extends Model
         'web_php_13' => 'web_php_13',
     ];
 
+    public function getProjects($expire = 86400)
+    {
+        $countArr = [
+            'aggregate' => 'log_count_hour',
+            'pipeline' => [
+                [
+                    '$project' => [
+                        'project' => 1,
+                        'date' => 1,
+                        'count' => 1
+                    ]
+                ],
+                ['$match' => ['date' => ['$gte' => date('Y-m-d 00:00:00', '-3 day')]]],
+                [
+                    '$group' => [
+                        '_id' => [
+                            'project' => '$project',
+                        ],
+                        'count' => ['$sum' => '$count'],
+                    ]
+                ],
+                ['$sort' => ['count' => -1]],
+            ]
+        ];
+
+        $cache_key = 'log_count_projects';
+        Cache::cut('file');
+        $project_rs = Cache::get($cache_key);
+        if ($project_rs === false) {
+            $mongo = new Mongo();
+            $projects = ['all' => '所有项目'];
+            $project_rs = $mongo->executeCommand($countArr);
+            $project_rs = Common::objectToArray($project_rs);
+            if (isset($project_rs[0]['result'])) {
+                foreach ($project_rs[0]['result'] as $_project) {
+                    $projects[$_project['_id']['project']] = strtoupper($_project['_id']['project']);
+                }
+            }
+            Cache::set($cache_key, json_encode($projects), $expire);
+        } else {
+            $projects = json_decode($project_rs, true);
+        }
+        return $projects;
+    }
 
     /**
      * 按状态统计
@@ -432,6 +476,15 @@ class LogModel extends Model
      */
     public function countByForewarning(array $where)
     {
+        if (isset($where['responseCode'])) {
+            if ($where['responseCode'] > 0) {
+                $where['content.responseCode']['$gte'] = intval($where['responseCode']);
+                $where['content.responseCode']['$lte'] = intval($where['responseCode']) + 20;
+            } else {
+                $where['content.responseCode']['$eq'] = intval($where['responseCode']);
+            }
+            unset($where['responseCode']);
+        }
         $countArr = [
             'aggregate' => 'log',
             'pipeline' => [
@@ -448,6 +501,7 @@ class LogModel extends Model
                         ],
                         'level' => 1,
                         'time' => 1,
+                        'content.responseCode' => 1,
                         'execTime' => '$content.execTime',
                     ]
                 ],
