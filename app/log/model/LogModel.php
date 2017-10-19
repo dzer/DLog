@@ -2,6 +2,7 @@
 
 namespace app\log\model;
 
+use Mll\Mll;
 use Mll\Model;
 use Mll\Cache;
 use Mll\Db\Mongo;
@@ -44,7 +45,7 @@ class LogModel extends Model
         'web_php_13' => 'web_php_13',
     ];
 
-    public function getProjects($expire = 86400)
+    public function getProjects($db, $expire = 86400)
     {
         $countArr = [
             'aggregate' => 'log_count_hour',
@@ -56,7 +57,7 @@ class LogModel extends Model
                         'count' => 1
                     ]
                 ],
-                ['$match' => ['date' => ['$gte' => date('Y-m-d 00:00:00', '-3 day')]]],
+                ['$match' => ['date' => ['$gte' => date('Y-m-d 00:00:00', strtotime('-3 day'))]]],
                 [
                     '$group' => [
                         '_id' => [
@@ -73,7 +74,9 @@ class LogModel extends Model
         Cache::cut('file');
         $project_rs = Cache::get($cache_key);
         if ($project_rs === false) {
-            $mongo = new Mongo();
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = $db;
+            $mongo = new Mongo($mongoConfig);
             $projects = ['all' => '所有项目'];
             $project_rs = $mongo->executeCommand($countArr);
             $project_rs = Common::objectToArray($project_rs);
@@ -225,6 +228,7 @@ class LogModel extends Model
      *
      * @param array $where
      * @param int $expire
+     * @param string $curr_time
      * @return array|mixed|object
      */
     public function count(array $where, $expire = 1800, $curr_time)
@@ -293,12 +297,13 @@ class LogModel extends Model
     /**
      * 按执行时间统计
      *
+     * @param string $db 数据库名称
      * @param array $where 条件
      * @param integer $page 页码
      * @param integer $page_size 条数
      * @return array|object
      */
-    function countRank(array $where, $page, $page_size)
+    function countRank($db, array $where, $page, $page_size)
     {
         $comArr = [
             'aggregate' => 'log',
@@ -413,12 +418,14 @@ class LogModel extends Model
                 ['$limit' => $page_size]
             ],
         ];
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         $collection = $mongo->selectCollection('log');
         return $collection->executeCommand($comArr);
     }
 
-    public function countError($where, $expire = 600, $curr_time)
+    public function countError($db, $where, $expire = 600, $curr_time)
     {
         if (isset($where['type'])) {
             unset($where['type']);
@@ -457,7 +464,9 @@ class LogModel extends Model
         $cache_key = 'log_count_error_rs_' . $where['project'] . '_' . $curr_time;
         $count_rs = Cache::get($cache_key);
         if ($count_rs === false) {
-            $mongo = new Mongo();
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = $db;
+            $mongo = new Mongo($mongoConfig);
             $collection = $mongo->selectCollection('log');
             $count_rs = $collection->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
@@ -471,10 +480,11 @@ class LogModel extends Model
     /**
      * 统计最近几分钟的日志
      *
+     * @param string $db
      * @param array $where
      * @return array|mixed|object
      */
-    public function countByForewarning(array $where)
+    public function countByForewarning($db, array $where)
     {
         if (isset($where['responseCode'])) {
             if ($where['responseCode'] > 0) {
@@ -517,12 +527,13 @@ class LogModel extends Model
             ]
         ];
 
-        $mongo = new Mongo();
-
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         return Common::objectToArray($mongo->executeCommand($countArr));
     }
 
-    public function countNum($where)
+    public function countNum($db, $where)
     {
         $countArr = [
             'aggregate' => 'log',
@@ -549,7 +560,9 @@ class LogModel extends Model
             ]
         ];
 
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         $count_rs = $mongo->executeCommand($countArr);
 
         $count_rs = Common::objectToArray($count_rs);

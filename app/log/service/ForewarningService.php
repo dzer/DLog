@@ -2,7 +2,6 @@
 
 namespace app\log\service;
 
-use app\log\model\LogCountHourModel;
 use app\log\model\LogModel;
 use Mll\Mll;
 
@@ -24,7 +23,7 @@ class ForewarningService
                 //'project' => ''
             ],
             'count' => [
-                'number' => 20, //次数
+                'number' => 50, //次数
             ],
             'sendType' => [
                 'wechat' => [
@@ -141,13 +140,13 @@ class ForewarningService
             ],
         ],
         [
-            'time' => 5,    //统计时间最近几分钟
+            'time' => 10,    //统计时间最近几分钟
             'where' => [    //筛选条件
                 'type' => 'RULE',
             ],
             'count' => [
-                'number' => 100,
-                'avg' => 1 //平均时间单位秒
+                'number' => 200,
+                'avg' => 2 //平均时间单位秒
             ],
             'sendType' => [
                 'wechat' => [
@@ -169,14 +168,15 @@ class ForewarningService
             $start_time = date('Y-m-d H:i:s', (time() - $scheme['time'] * 60));
             $end_time = date('Y-m-d H:i:s');
 
-            if ($scheme['time'] > 0) {
+            if (isset($scheme['time']) && $scheme['time'] > 0) {
                 $where['time']['$gt'] = $start_time;
             }
-            if ($where['execTime'] > 0) {
+            if (isset($where['execTime']) && $where['execTime'] > 0) {
                 $where['execTime']['$gt'] = $where['execTime'];
             }
+            $db = 'system_log_' . date('m_d');
             //统计日志
-            $rs = $model->countByForewarning($where);
+            $rs = $model->countByForewarning($db, $where);
             $rs_msg[$k]['where'] = $scheme;
             $rs_msg[$k]['rs'] = $rs;
 
@@ -239,9 +239,9 @@ class ForewarningService
         if (is_array($user)) {
             foreach ($user as $_user) {
                 if ($_user == 'all') {
-                    $rs = Mll::app()->curl->get($url . '?content=' . urlencode($msg));
+                    Mll::app()->curl->get($url . '?content=' . urlencode($msg));
                 } else {
-                    $rs = Mll::app()->curl->get($url . '?content=' . urlencode($msg) . '&wxzh=' . $_user);
+                    Mll::app()->curl->get($url . '?content=' . urlencode($msg) . '&wxzh=' . $_user);
                 }
             }
         }

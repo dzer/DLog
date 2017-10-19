@@ -30,7 +30,11 @@ class Forewarning extends Controller
      */
     public function count()
     {
+        //创建当天DB索引和删除三天前的日志DB
+        LogService::checkCurrDb();
+
         $service = new ForewarningService();
         $service->count();
+
     }
 }

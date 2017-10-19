@@ -2,6 +2,7 @@
 
 namespace app\log\model;
 
+use Mll\Mll;
 use Mll\Model;
 use Mll\Cache;
 use Mll\Db\Mongo;
@@ -12,12 +13,13 @@ class LogCountHourModel extends Model
     /**
      * 按条件统计数量
      *
+     * @param string $db
      * @param string $field
      * @param array $where
      * @param string $group
-     * @return array|mixed|object
+     * @return int
      */
-    public function sumField($field, array $where, $group = null)
+    public function sumField($db, $field, array $where, $group = null)
     {
         $statusArr = [
             'aggregate' => 'log_count_hour',
@@ -33,10 +35,11 @@ class LogCountHourModel extends Model
                 ],
             ]
         ];
-
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         $rs = Common::objectToArray($mongo->executeCommand($statusArr));
-        return isset($rs[0]['result'][0]) ? $rs[0]['result'][0] : null;
+        return isset($rs[0]['result'][0]['count']) ? $rs[0]['result'][0]['count'] : 0;
     }
 
     /**
@@ -75,10 +78,14 @@ class LogCountHourModel extends Model
             ]
         ];
         Cache::cut('file');
-        $cache_key = 'log2_status_rs_' . $where['project'] . '_' . $curr_time . '_' . $where['type'];
+        $project = isset($where['project']) ? $where['project'] : '';
+        $type = isset($where['type']) ? $where['type'] : '';
+        $cache_key = 'log2_status_rs_' . $project . '_' . $curr_time . '_' . $type;
         $status_rs = Cache::get($cache_key);
         if ($status_rs === false) {
-            $mongo = new Mongo();
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongo = new Mongo($mongoConfig);
             $status_rs = $mongo->executeCommand($statusArr);
             $status_rs = Common::objectToArray($status_rs);
             Cache::set($cache_key, json_encode($status_rs), $expire);
@@ -93,6 +100,7 @@ class LogCountHourModel extends Model
      *
      * @param array $where
      * @param int $expire
+     * @param string $curr_time
      * @return array|mixed|object
      */
     public function countByHour(array $where, $expire = 1800, $curr_time)
@@ -116,10 +124,14 @@ class LogCountHourModel extends Model
                 ['$sort' => ['date' => -1]],
             ]
         ];
-        $cache_key = 'log2_count_rs_' . $where['project'] . '_' . $curr_time . '_' . $where['type'];
+        $project = isset($where['project']) ? $where['project'] : '';
+        $type = isset($where['type']) ? $where['type'] : '';
+        $cache_key = 'log2_count_rs_' . $project . '_' . $curr_time . '_' . $type;
         $countData = Cache::get($cache_key);
         if ($countData === false) {
-            $mongo = new Mongo();
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongo = new Mongo($mongoConfig);
             $count_rs = $mongo->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
             if (!empty($count_rs[0]['result'])) {
@@ -183,11 +195,13 @@ class LogCountHourModel extends Model
                 ['$sort' => ['count' => -1]],
             ]
         ];
-
-        $cache_key = 'log2_count_error_rs_' . $where['project'] . '_' . $curr_time;
+        $project = isset($where['project']) ? $where['project'] : '';
+        $cache_key = 'log2_count_error_rs_' . $project . '_' . $curr_time;
         $count_rs = Cache::get($cache_key);
         if ($count_rs === false) {
-            $mongo = new Mongo();
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongo = new Mongo($mongoConfig);
             $count_rs = $mongo->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
             Cache::set($cache_key, json_encode($count_rs), $expire);

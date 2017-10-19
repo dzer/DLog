@@ -22,88 +22,6 @@ class Index extends Controller
         }
     }
 
-    public function index2()
-    {
-        $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
-        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
-        $project = Mll::app()->request->get('project', 'all');
-        $_GET['curr_time'] = $curr_time;
-        $_GET['log_type'] = $log_type;
-        $_GET['project'] = $project;
-
-        $where = [];
-        if (!empty($log_type)) {
-            $where['type'] = $log_type;
-        }
-        if (!empty($project)) {
-            $where['project'] = $project;
-        }
-        if (!empty($curr_time)) {
-            $where['time']['$gte'] = $curr_time . ' 00:00:00';
-            $where['time']['$lte'] = $curr_time . ' 23:59:59';
-        }
-        Cache::cut('file');
-        $expire = 1800;
-        if ($curr_time < date('Y-m-d')) {
-            $expire = 0;
-        }
-        //今日以前的日志总量
-        $cache_key = 'log_count_' . date('d');
-        $count = Cache::get($cache_key);
-        $mongo = (new Mongo())->selectCollection('log');
-        if (isset($_GET['count']) || $count === false) {
-            $count = $mongo->count(['microtime' => ['$lt' => strtotime(date('Y-m-d 0:0:0'))]]);
-            Cache::set($cache_key, $count, 0);
-        }
-
-        //今日日志量
-        $cache_key = 'log_today_count';
-        $today_count = Cache::get($cache_key);
-        if (isset($_GET['count']) || $today_count === false) {
-            $today_count = $mongo->count(['microtime' => ['$gte' => strtotime(date('Y-m-d 0:0:0'))]]);
-            Cache::set($cache_key, $today_count, 600);
-        }
-        $count += $today_count;
-        $model = new LogModel();
-
-        //统计状态
-        $status_rs = $model->countStatus($where, $expire, $curr_time);
-        //时间段统计
-        $count_rs = $model->count($where, $expire, $curr_time);
-        //统计错误数
-        $count_error_rs = $model->countError($where, $expire, $curr_time);
-
-        $countData = array();
-        if (!empty($count_rs[0]['result'])) {
-            foreach ($count_rs[0]['result'] as $_count) {
-                $hour = intval(date('H', strtotime($_count['_id']['date'] . ':00')));
-                $time[$hour] = $_count['time'];
-                $success[$hour] = $_count['code_200'];
-                $fail[$hour] = $_count['count'] - $success[$hour];
-                $error[$hour] = $_count['error'];
-            }
-        }
-        for ($i = 0; $i < 24; $i++) {
-            $countData['count_time'][] = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
-            $countData['time'][$i] = isset($time[$i]) ? floatval(sprintf('%.2f', ($time[$i] * 1000))) : 0;
-            $countData['success'][$i] = isset($success[$i]) ? $success[$i] : 0;
-            $countData['fail'][$i] = isset($fail[$i]) ? $fail[$i] : 0;
-            $countData['error'][$i] = isset($error[$i]) ? $error[$i] : 0;
-        }
-        return $this->render('index', [
-            'countData' => $countData,
-            'statusData' => isset($status_rs[0]['result'][0]) ? $status_rs[0]['result'][0] : null,
-            'count' => intval($count),
-
-            'today_count' => $today_count,
-            'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
-            'base_url' => '/' . Mll::app()->request->getModule()
-                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
-            'projects' => $model->getProjects(),
-            'types' => $model->types,
-        ]);
-    }
-
     public function index()
     {
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
@@ -135,24 +53,26 @@ class Index extends Controller
         $logCountModel = new LogCountHourModel();
 
         if (isset($_GET['count']) || $count === false) {
-            $count = $logCountModel->sumField('$count', ['date' => ['$lt' => date('Y-m-d')], null]);
-            $count = isset($count['count']) ? $count['count'] : 0;
+            $db = 'system_log_' . date('m_d', strtotime('-1 day'));
+            $countOne = $logCountModel->sumField($db,'$count', ['date' => ['$lt' => date('Y-m-d')], null]);
+            $db = 'system_log_' . date('m_d', strtotime('-2 day'));
+            $countTwo = $logCountModel->sumField($db,'$count', ['date' => ['$lt' => date('Y-m-d')], null]);
+            $db = 'system_log_' . date('m_d', strtotime('-3 day'));
+            $countThree = $logCountModel->sumField($db,'$count', ['date' => ['$lt' => date('Y-m-d')], null]);
+            $count = $countOne + $countTwo + $countThree;
             Cache::set($cache_key, $count, 0);
         }
 
         //今日日志量
-        $today_count = $logCountModel->sumField('$count', ['date' => ['$gte' => date('Y-m-d')], null]);
-        $today_count = isset($today_count['count']) ? $today_count['count'] : 0;
+        $db = 'system_log_' . date('m_d');
+        $today_count = $logCountModel->sumField($db,'$count', ['date' => ['$gte' => date('Y-m-d')], null]);
 
         $count += $today_count;
         $model = new LogModel();
-
         //统计状态
         $status_rs = $logCountModel->countStatus($where, $expire, $curr_time);
-
         //时间段统计
         $countData = $logCountModel->countByHour($where, $expire, $curr_time);
-
         //统计错误数
         $count_error_rs = $logCountModel->countError($where, $expire, $curr_time);
 
@@ -164,7 +84,7 @@ class Index extends Controller
             'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
-            'projects' => $model->getProjects(),
+            'projects' => $model->getProjects($db),
             'types' => $model->types,
             'servers' => $model->servers,
         ]);
@@ -207,12 +127,6 @@ class Index extends Controller
         if (!empty($server)) {
             $where['server'] = $server;
         }
-        if (!empty($start_time)) {
-            $where['time']['$gte'] = $start_time;
-        }
-        if (!empty($end_time)) {
-            $where['time']['$lte'] = $end_time;
-        }
         if (!empty($execTime)) {
             switch ($execTime) {
                 case '200':
@@ -230,6 +144,13 @@ class Index extends Controller
                     break;
             }
         }
+        if (!empty($start_time)) {
+            $where['time']['$gte'] = $start_time;
+        }
+        if (!empty($end_time)) {
+            $where['time']['$lte'] = $end_time;
+        }
+
         if (!empty($request_url)) {
             $where['content.url']['$regex'] = preg_quote(trim($request_url));
         }
@@ -250,8 +171,10 @@ class Index extends Controller
                 $where['content.responseCode']['$eq'] = $responseCode;
             }
         }
-
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $db = 'system_log_' . date('m_d', strtotime($start_time));
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         $collection = $mongo->selectCollection('log');
         $model = new LogModel();
         //echo json_encode($where);
@@ -269,7 +192,7 @@ class Index extends Controller
                 //'page_count' => $page_count,
                 //'count' => $count
             ],
-            'projects' => $model->getProjects(),
+            'projects' => $model->getProjects($db),
             'types' => $model->types,
             'servers' => $model->servers,
             'base_url' => '/' . Mll::app()->request->getModule()
@@ -358,7 +281,10 @@ class Index extends Controller
             }
         }
 
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $db = 'system_log_' . date('m_d', strtotime($start_time));
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         $collection = $mongo->selectCollection('log');
         $model = new LogModel();
         //echo json_encode($where);
@@ -376,7 +302,7 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
-            'projects' => $model->getProjects(),
+            'projects' => $model->getProjects($db),
             'types' => $model->types,
             'servers' => $model->servers,
             'base_url' => '/' . Mll::app()->request->getModule()
@@ -390,8 +316,12 @@ class Index extends Controller
     public function trace()
     {
         $requestId = Mll::app()->request->get('request_id');
+        $time = Mll::app()->request->get('time', date('Y-m-d'));
 
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $db = 'system_log_' . date('m_d', strtotime($time));
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
         $collection = $mongo->selectCollection('log');
         $rs = $collection->find(['requestId' => $requestId]);
         $rs = Common::objectToArray($rs);
@@ -440,7 +370,7 @@ class Index extends Controller
         $_GET['execTime'] = $execTime;
 
         $where = [];
-        if (!empty($project)) {
+        if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
         }
         if (!empty($start_time)) {
@@ -459,7 +389,9 @@ class Index extends Controller
         }
         $where['content.execTime']['$gt'] = $execTime;
 
-        $mongo = new Mongo();
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($start_time));
+        $mongo = new Mongo($mongoConfig);
         $collection = $mongo->selectCollection('log');
         $count = $collection->count($where);
         unset($where['content.execTime']);
@@ -469,7 +401,8 @@ class Index extends Controller
         $page_count = ceil($count / $page_size);
 
         $model = new LogModel();
-        $rs = Common::objectToArray($model->countRank($where, $page, $page_size));
+        $db = 'system_log_' . date('m_d', strtotime($start_time));
+        $rs = Common::objectToArray($model->countRank($db, $where, $page, $page_size));
 
         return $this->render('rank', [
             'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
@@ -479,7 +412,7 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
-            'projects' => $model->getProjects(),
+            'projects' => $model->getProjects($db),
             'types' => $model->types,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()

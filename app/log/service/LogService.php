@@ -7,6 +7,7 @@ use Mll\Common\Amqp;
 use Mll\Cache;
 use Mll\Db\Mongo;
 use Mll\Mll;
+use MongoDB\BSON\UTCDateTime;
 
 class LogService
 {
@@ -33,7 +34,7 @@ class LogService
                 $log = json_decode($log, true);
                 if (!empty($log)) {
                     $orig_date = new \DateTime($log['time']);
-                    $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
+                    $log['date'] = new UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
                     $logArr[] = $log;
                 }
             }
@@ -50,13 +51,15 @@ class LogService
      * @param int $num 日志条数
      * @return array|bool
      */
-    public static function pullLogByMq($num = 2000)
+    public static function pullLogByMq($num = 10000)
     {
         ini_set('memory_limit', '512M');
         set_time_limit(240);
-        $num = min(10000, $num);
-
-        $mq = new Amqp(Mll::app()->config->get('mq.rabbit'));
+        $num = min(50000, $num);
+        static $mq;
+        if ($mq === null) {
+            $mq = new Amqp(Mll::app()->config->get('mq.rabbit'));
+        }
         while ($num--) {
             $msg = $mq->getMessage('QUEUE_PHP_LOG');
             if (empty($msg)) {
@@ -64,97 +67,176 @@ class LogService
             }
             $logs[] = $msg;
         }
-        //Mll::app()->log->debug('mq:' . (time() - $start_time));
         //分析日志并存储
         $insertNum = $updateNum = 0;
         if (!empty($logs)) {
             $logArr = self::countLogByHour($logs);
             unset($logs);
+            $mongoConfig = Mll::app()->config->get('db.mongo');
 
-            $mongo = new Mongo();
-            $start_time = time();
-            $insertNum = $mongo->selectCollection('log')->batchInsert($logArr['log']);
-            Mll::app()->log->debug('mongo:' . (time() - $start_time));
-            if ($insertNum == 0) {
-                Mll::app()->log->warning(
-                    date('Y-m-d H:i:s') . 'mongo 插入失败' . count($logArr['log']) . '条！'
-                );
-            }
-            if (!empty($logArr['countHour'])) {
-                Mll::app()->log->debug($logArr['countHour']);
-                $mongo->selectCollection('log_count_hour');
-                foreach ($logArr['countHour'] as $k => $v) {
-                    $where = explode('#', $k);
-
-                    $updateNum = $mongo->update(
-                        ['date' => $where[0], 'hour' => $where[1], 'project' => $where[2], 'type' => $where[3]],
-                        [
-                            '$inc' => $v['inc'],
-                            '$set' => $v['set']
-                        ],
-                        ['upsert' => true]
+            foreach ($logArr['log'] as $date => $_log) {
+                $mongoConfig['database'] = 'system_log_' . $date;
+                $mongo = new Mongo($mongoConfig);
+                $insertNum += $mongo->selectCollection('log')->batchInsert($_log);
+                if ($insertNum == 0) {
+                    Mll::app()->log->warning(
+                        date('Y-m-d H:i:s') . 'mongo 插入失败' . count($_log) . '条！'
                     );
                 }
             }
+
+            if (!empty($logArr['countHour'])) {
+                foreach ($logArr['countHour'] as $date => $_log) {
+                    $mongoConfig['database'] = 'system_log_' . $date;
+                    $mongo = new Mongo($mongoConfig);
+                    $mongo->selectCollection('log_count_hour');
+                    foreach ($_log as $k => $v) {
+                        $where = explode('#', $k);
+                        $updateNum += $mongo->update(
+                            ['date' => $where[0], 'hour' => $where[1], 'project' => $where[2], 'type' => $where[3]],
+                            [
+                                '$inc' => $v['inc'],
+                                '$set' => $v['set']
+                            ],
+                            ['upsert' => true]
+                        );
+                    }
+                }
+            }
         }
+        Mll::app()->log->debug('inc:' . $insertNum . ', update:' . $updateNum);
         return 'inc:' . $insertNum . ', update:' . $updateNum;
     }
 
     public static function countLogByHour($logs)
     {
-        $logArr = $countHour = [];
+        $logArr = $countHourArr = $countHour = [];
         foreach ($logs as $log) {
             $log = json_decode($log, true);
             if (!empty($log)) {
-                $orig_date = new \DateTime($log['time']);
                 if (!isset($log['content']['url'])) {
                     $log['content']['url'] = '?';
                 }
                 $log['content']['url'] = strlen($log['content']['url']) > 1000 ?
                     substr($log['content']['url'], 0, 1000) : $log['content']['url'];
-                $log['date'] = new \MongoDB\BSON\UTCDateTime(($orig_date->getTimestamp() + 8 * 3600) * 1000);
-
+                $log['createTime'] = time();
                 $date = date('Y-m-d', intval($log['microtime']));
                 $hour = date('H', intval($log['microtime']));
                 $key = "{$date}#{$hour}#{$log['project']}#{$log['type']}";
+
                 $countHour[$key]['set'] = [
                     'date' => $date,
                     'hour' => $hour,
                     'project' => $log['project'],
                     'type' => $log['type']
                 ];
+                if (!isset($countHour[$key]['inc'])) {
+                    $countHour[$key]['inc'] = [
+                        'count' => 0,
+                        'execTime' => 0,
+                    ];
+                }
+
                 $countHour[$key]['inc']['count'] += 1;
                 $countHour[$key]['inc']['execTime'] += $log['content']['execTime'];
-                $countHour[$key]['inc']['level_' . $log['level']] += 1;
-                if (is_numeric($log['content']['responseCode']) && $log['content']['responseCode'] == 0) {
-                    $countHour[$key]['inc']['httpCode_0'] += 1;
-                } elseif ($log['content']['responseCode'] >= 200 && $log['content']['responseCode'] < 300) {
-                    $countHour[$key]['inc']['httpCode_200'] += 1;
-                } elseif ($log['content']['responseCode'] >= 300 && $log['content']['responseCode'] < 400) {
-                    $countHour[$key]['inc']['httpCode_300'] += 1;
-                } elseif ($log['content']['responseCode'] >= 400 && $log['content']['responseCode'] < 500) {
-                    $countHour[$key]['inc']['httpCode_400'] += 1;
-                } elseif ($log['content']['responseCode'] >= 500 && $log['content']['responseCode'] < 600) {
-                    $countHour[$key]['inc']['httpCode_500'] += 1;
+                $countHour[$key]['inc']['level_' . $log['level']] =
+                    isset($countHour[$key]['inc']['level_' . $log['level']]) ? $countHour[$key]['inc']['level_' . $log['level']] + 1 : 1;
+
+                if (isset($log['content']['responseCode'])) {
+                    if (is_numeric($log['content']['responseCode']) && $log['content']['responseCode'] == 0) {
+                        $countHour[$key]['inc']['httpCode_0'] =
+                            isset($countHour[$key]['inc']['httpCode_0']) ? $countHour[$key]['inc']['httpCode_0'] + 1 : 1;
+                    } elseif ($log['content']['responseCode'] >= 200 && $log['content']['responseCode'] < 300) {
+                        $countHour[$key]['inc']['httpCode_200'] =
+                            isset($countHour[$key]['inc']['httpCode_200']) ? $countHour[$key]['inc']['httpCode_200'] + 1 : 1;
+                    } elseif ($log['content']['responseCode'] >= 300 && $log['content']['responseCode'] < 400) {
+                        $countHour[$key]['inc']['httpCode_300'] =
+                            isset($countHour[$key]['inc']['httpCode_300']) ? $countHour[$key]['inc']['httpCode_300'] + 1 : 1;
+                    } elseif ($log['content']['responseCode'] >= 400 && $log['content']['responseCode'] < 500) {
+                        $countHour[$key]['inc']['httpCode_400'] =
+                            isset($countHour[$key]['inc']['httpCode_400']) ? $countHour[$key]['inc']['httpCode_400'] + 1 : 1;
+                    } elseif ($log['content']['responseCode'] >= 500 && $log['content']['responseCode'] < 600) {
+                        $countHour[$key]['inc']['httpCode_500'] =
+                            isset($countHour[$key]['inc']['httpCode_500']) ? $countHour[$key]['inc']['httpCode_500'] + 1 : 1;
+                    }
                 }
 
-                if ($log['content']['execTime'] <= 0.2) {
-                    $countHour[$key]['inc']['execTime_200'] += 1;
-                } elseif ($log['content']['execTime'] > 0.2 && $log['content']['execTime'] <= 0.5) {
-                    $countHour[$key]['inc']['execTime_500'] += 1;
-                } elseif ($log['content']['execTime'] > 0.5 && $log['content']['execTime'] <= 1) {
-                    $countHour[$key]['inc']['execTime_1000'] += 1;
-                } elseif ($log['content']['execTime'] > 1 && $log['content']['execTime'] <= 5) {
-                    $countHour[$key]['inc']['execTime_5000'] += 1;
-                } else {
-                    $countHour[$key]['inc']['execTime_5000+'] += 1;
+                if (isset($log['content']['execTime'])) {
+                    if ($log['content']['execTime'] <= 0.2) {
+                        $countHour[$key]['inc']['execTime_200'] =
+                            isset($countHour[$key]['inc']['execTime_200']) ? $countHour[$key]['inc']['execTime_200'] + 1 : 1;
+                    } elseif ($log['content']['execTime'] > 0.2 && $log['content']['execTime'] <= 0.5) {
+                        $countHour[$key]['inc']['execTime_500'] =
+                            isset($countHour[$key]['inc']['execTime_500']) ? $countHour[$key]['inc']['execTime_500'] + 1 : 1;
+                    } elseif ($log['content']['execTime'] > 0.5 && $log['content']['execTime'] <= 1) {
+                        $countHour[$key]['inc']['execTime_1000'] =
+                            isset($countHour[$key]['inc']['execTime_1000']) ? $countHour[$key]['inc']['execTime_1000'] + 1 : 1;
+                    } elseif ($log['content']['execTime'] > 1 && $log['content']['execTime'] <= 5) {
+                        $countHour[$key]['inc']['execTime_5000'] =
+                            isset($countHour[$key]['inc']['execTime_5000']) ? $countHour[$key]['inc']['execTime_5000'] + 1 : 1;;
+                    } else {
+                        $countHour[$key]['inc']['execTime_5000+'] =
+                            isset($countHour[$key]['inc']['execTime_5000+']) ? $countHour[$key]['inc']['execTime_5000+'] + 1 : 1;
+                    }
                 }
-                $logArr[] = $log;
+
+                $db_key = date('m_d', intval($log['microtime']));
+                $countHourArr[$db_key] = $countHour;
+                $logArr[$db_key][] = $log;
             }
         }
-        return ['log' => $logArr, 'countHour' => $countHour];
+        return ['log' => $logArr, 'countHour' => $countHourArr];
     }
 
+    /**
+     * 判断当天DB，创建索引和删除几天前的日志DB
+     *
+     */
+    public static function checkCurrDb()
+    {
+        Cache::cut('file');
+        $cacheKey = 'check_curr_db_' . date('d');
+        $is_checked = Cache::get($cacheKey);
+        if ($is_checked === false) {
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            unset($mongoConfig['database']);
+            $mongo = new Mongo($mongoConfig);
+            $mongo->setDBName('system_log_' . date('m_d'));
+            $mongo->executeCommand([
+                'createIndexes' => 'log',
+                'indexes' => [
+                    [
+                        'key' => ['time' => -1, 'type' => 1, 'level' => 1, 'project' => 1],
+                        'name' => 'time_-1_type_1_level_1_project_1'
+                    ],
+                    [
+                        'key' => ['requestId' => 1],
+                        'name' => 'requestId_1'
+                    ],
+                    [
+                        'key' => ['content.responseCode' => -1],
+                        'name' => 'content.responseCode_1'
+                    ],
+                    [
+                        'key' => ['content.url' => 1],
+                        'name' => 'content.url_1'
+                    ],
+                ]
+            ]);
+            $mongo->executeCommand([
+                'createIndexes' => 'log_count_hour',
+                'indexes' => [
+                    [
+                        'key' => ['date' => -1, 'project' => 1, 'type' => 1],
+                        'name' => 'date_-1_project_1_type_1'
+                    ],
+                ]
+            ]);
+            $mongo->setDBName('system_log_' . date('m_d', strtotime('-4 day')));
+            $mongo->executeCommand(['dropDatabase' => 1]);
+            Cache::set($cacheKey, 1, 86400);
+        }
+    }
 
     /**
      * 跟踪日志按版本排序
