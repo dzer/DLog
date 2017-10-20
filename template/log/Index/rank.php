@@ -41,6 +41,14 @@
                             <option <?= isset($_GET['execTime']) && $_GET['execTime'] == '10' ? 'selected="selected"' : ''?> value="10">大于10s</option>
                         </select>
                     </div>
+                    <div class="form-group" style="margin-left: 10px">
+                        <label>排序：</label>
+                        <select name="sort" class="form-control">
+                            <option value="0">请选择</option>
+                            <option <?= isset($_GET['sort']) && $_GET['sort'] == 'time' ? 'selected="selected"' : ''?> value="time">执行时间</option>
+                            <option <?= isset($_GET['sort']) && $_GET['sort'] == 'count' ? 'selected="selected"' : ''?> value="count">调用次数</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-default" style="margin-left: 10px">搜索</button>
                     <a type="submit" href="<?= $base_url ?>" class="btn btn-default" style="margin-left: 10px">重置</a>
                 </form>

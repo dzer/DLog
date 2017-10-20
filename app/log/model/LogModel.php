@@ -303,7 +303,7 @@ class LogModel extends Model
      * @param integer $page_size 条数
      * @return array|object
      */
-    function countRank($db, array $where, $page, $page_size)
+    function countRank($db, array $where, $page, $page_size, $sort = 'time')
     {
         $comArr = [
             'aggregate' => 'log',
@@ -413,7 +413,7 @@ class LogModel extends Model
                         'max_time' => ['$max' => '$execTime'],
                     ]
                 ],
-                ['$sort' => ['time' => -1]],
+                ['$sort' => [$sort => -1]],
                 ['$skip' => ($page - 1) * $page_size],
                 ['$limit' => $page_size]
             ],

@@ -363,6 +363,8 @@ class Index extends Controller
         $page_size = Mll::app()->request->get('limit/d', 20, 'intval');
         $project = Mll::app()->request->get('project', 'help');
         $execTime = Mll::app()->request->get('execTime/f', 5, 'floatval');
+        $sort = Mll::app()->request->get('sort', 'count');
+
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
         $_GET['log_type'] = $log_type;
@@ -402,7 +404,7 @@ class Index extends Controller
 
         $model = new LogModel();
         $db = 'system_log_' . date('m_d', strtotime($start_time));
-        $rs = Common::objectToArray($model->countRank($db, $where, $page, $page_size));
+        $rs = Common::objectToArray($model->countRank($db, $where, $page, $page_size, $sort));
 
         return $this->render('rank', [
             'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,

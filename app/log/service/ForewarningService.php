@@ -131,7 +131,7 @@ class ForewarningService
                 'type' => 'RULE',
             ],
             'count' => [
-                'number' => 20, //次数
+                'number' => 50, //次数
             ],
             'sendType' => [
                 'wechat' => [
@@ -146,7 +146,7 @@ class ForewarningService
             ],
             'count' => [
                 'number' => 200,
-                'avg' => 2 //平均时间单位秒
+                'avg' => 3 //平均时间单位秒
             ],
             'sendType' => [
                 'wechat' => [
