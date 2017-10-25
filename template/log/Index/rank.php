@@ -32,6 +32,16 @@
                         </select>
                     </div>
                     <div class="form-group" style="margin-left: 10px">
+                        <label>日志级别：</label>
+                        <select name="log_level" class="form-control">
+                            <option value="">请选择</option>
+                            <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'info' ? 'selected="selected"' : ''?> value="info">info</option>
+                            <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'error' ? 'selected="selected"' : ''?> value="error">error</option>
+                            <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'warning' ? 'selected="selected"' : ''?> value="warning">warning</option>
+                            <option <?= isset($_GET['log_level']) && $_GET['log_level'] == 'notice' ? 'selected="selected"' : ''?> value="notice">notice</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-left: 10px">
                         <label>执行时间：</label>
                         <select name="execTime" class="form-control">
                             <option value="0">请选择</option>
@@ -44,7 +54,7 @@
                     <div class="form-group" style="margin-left: 10px">
                         <label>排序：</label>
                         <select name="sort" class="form-control">
-                            <option value="0">请选择</option>
+                            <option value="">请选择</option>
                             <option <?= isset($_GET['sort']) && $_GET['sort'] == 'time' ? 'selected="selected"' : ''?> value="time">执行时间</option>
                             <option <?= isset($_GET['sort']) && $_GET['sort'] == 'count' ? 'selected="selected"' : ''?> value="count">调用次数</option>
                         </select>
@@ -81,7 +91,7 @@
                             <tr class="<?= $is_danger ? 'danger' : '' ?>">
                                 <td>
                                     <div>
-                                        <a class="line" target="_blank" href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
+                                        <a class="line" target="_blank" href="/log/Index/just?project=<?= $_GET['project'] ?>&log_level=<?= $_GET['log_level']?>&log_type=<?= $_GET['log_type']?>&start_time=<?= urlencode($_GET['start_time'])?>&end_time=<?= urlencode($_GET['end_time'])?>&request_url=<?= urlencode($log['_id']['url'])?>"><?= $log['_id']['url'] ?></a>
                                     </div>
                                 </td>
                                 <td><?= $log['count'] ?></td>
@@ -137,7 +147,7 @@
                     </tbody>
                 </table>
                 <nav aria-label="Page navigation" class="pull-right">
-                    <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
+                    <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个调用次数</div>
                     <ul class="pagination">
                         <?php
                         if (!empty($page)) {
@@ -151,22 +161,14 @@
                                 </li>
                                 <?php
                             }
-                            for ($i = max(1, $page['page'] - 5); $i <= min($page['page'] + 5, $page['page_count']); $i++) {
-                                $_GET['page'] = $i;
-                                ?>
-                                <li <?= $page['page'] == $i ? 'class="active"' : ''?>><a href="<?= $base_url . '?' . http_build_query($_GET);?>"><?= $i ?></a></li>
-                                <?php
-                            }
-                            if ($page['page'] < $page['page_count']) {
-                                $_GET['page'] = $page['page'] + 1;
-                                ?>
-                                <li>
-                                    <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Next">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </a>
-                                </li>
-                                <?php
-                            }
+                            $_GET['page'] = $page['page'] + 1;
+                            ?>
+                            <li>
+                                <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <?php
                         }
                         ?>
                     </ul>

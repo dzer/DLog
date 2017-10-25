@@ -124,6 +124,15 @@ class Index extends Controller
         if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
         }
+        if (!empty($log_level)) {
+            $where['level'] = $log_level;
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        }
+        if (!empty($request_id)) {
+            $where['requestId'] = $request_id;
+        }
         if (!empty($server)) {
             $where['server'] = $server;
         }
@@ -153,15 +162,6 @@ class Index extends Controller
 
         if (!empty($request_url)) {
             $where['content.url']['$regex'] = preg_quote(trim($request_url));
-        }
-        if (!empty($log_level)) {
-            $where['level'] = $log_level;
-        }
-        if (!empty($log_type)) {
-            $where['type'] = $log_type;
-        }
-        if (!empty($request_id)) {
-            $where['requestId'] = $request_id;
         }
         if (is_numeric($responseCode)) {
             if ($responseCode > 0) {
@@ -234,6 +234,15 @@ class Index extends Controller
         if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
         }
+        if (!empty($log_level)) {
+            $where['level'] = $log_level;
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        }
+        if (!empty($request_id)) {
+            $where['requestId'] = $request_id;
+        }
         if (!empty($server)) {
             $where['server'] = $server;
         }
@@ -262,15 +271,6 @@ class Index extends Controller
         }
         if (!empty($request_url)) {
             $where['content.url']['$regex'] = preg_quote(trim($request_url));
-        }
-        if (!empty($log_level)) {
-            $where['level'] = $log_level;
-        }
-        if (!empty($log_type)) {
-            $where['type'] = $log_type;
-        }
-        if (!empty($request_id)) {
-            $where['requestId'] = $request_id;
         }
         if (is_numeric($responseCode)) {
             if ($responseCode > 0) {
@@ -359,6 +359,7 @@ class Index extends Controller
         $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
         $request_url = Mll::app()->request->get('request_url');
         $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
+        $log_level = Mll::app()->request->get('log_level');
         $page = Mll::app()->request->get('page/d', 1, 'intval');
         $page_size = Mll::app()->request->get('limit/d', 20, 'intval');
         $project = Mll::app()->request->get('project', 'help');
@@ -368,12 +369,22 @@ class Index extends Controller
         $_GET['start_time'] = $start_time;
         $_GET['end_time'] = $end_time;
         $_GET['log_type'] = $log_type;
+        $_GET['log_level'] = $log_level;
         $_GET['project'] = $project;
         $_GET['execTime'] = $execTime;
+        $_GET['sort'] = $sort;
 
         $where = [];
         if (!empty($project) && $project != 'all') {
             $where['project'] = $project;
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        } else {
+            $where['type'] = LOG_TYPE_FINISH;
+        }
+        if (!empty($log_level)) {
+            $where['level'] = $log_level;
         }
         if (!empty($start_time)) {
             $where['time']['$gte'] = $start_time;
@@ -384,11 +395,10 @@ class Index extends Controller
         if (!empty($request_url)) {
             $where['content.url']['$regex'] = preg_quote(trim($request_url));
         }
-        if (!empty($log_type)) {
-            $where['type'] = $log_type;
-        } else {
-            $where['type'] = LOG_TYPE_FINISH;
+        if (empty($sort)) {
+            $sort = 'count';
         }
+
         $where['content.execTime']['$gt'] = $execTime;
 
         $mongoConfig = Mll::app()->config->get('db.mongo');

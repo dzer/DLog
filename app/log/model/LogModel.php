@@ -40,6 +40,7 @@ class LogModel extends Model
 
     public $servers = [
         'web_php_04' => 'web_php_04',
+        'web_php_05' => 'web_php_05',
         'web_php_07' => 'web_php_07',
         'web_php_08' => 'web_php_08',
         'web_php_13' => 'web_php_13',
@@ -315,6 +316,7 @@ class LogModel extends Model
                         'type' => 1,
                         'time' => 1,
                         'project' => 1,
+                        'level' => 1,
                         'execTime' => '$content.execTime',
                         'execTime_200' => [
                             '$cond' => [
@@ -502,13 +504,6 @@ class LogModel extends Model
                     '$project' => [
                         'project' => 1,
                         'type' => 1,
-                        'error' => [
-                            '$cond' => [
-                                'if' => ['$eq' => ['$level', 'error']],
-                                'then' => 1,
-                                'else' => 0
-                            ]
-                        ],
                         'level' => 1,
                         'time' => 1,
                         'content.responseCode' => 1,
@@ -520,7 +515,6 @@ class LogModel extends Model
                     '$group' => [
                         '_id' => null,
                         'count' => ['$sum' => 1],
-                        'error' => ['$sum' => '$error'],
                         'time' => ['$avg' => '$execTime'],
                     ]
                 ],
@@ -567,5 +561,41 @@ class LogModel extends Model
 
         $count_rs = Common::objectToArray($count_rs);
         return isset($count_rs[0]['result'][0]['count']) ? $count_rs[0]['result'][0]['count'] : null;
+    }
+
+
+    /**
+     * 统计各个服务器的日志数量
+     *
+     * @param string $db
+     * @param array $where
+     * @return array|mixed|object
+     */
+    public function countByServer($db, array $where)
+    {
+        $countArr = [
+            'aggregate' => 'log',
+            'pipeline' => [
+                [
+                    '$project' => [
+                        'time' => 1,
+                        'server' => 1,
+                    ]
+                ],
+                ['$match' => $where],
+                [
+                    '$group' => [
+                        '_id' => [
+                            'server' => '$server',
+                        ],
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ]
+        ];
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = $db;
+        $mongo = new Mongo($mongoConfig);
+        return Common::objectToArray($mongo->executeCommand($countArr));
     }
 }

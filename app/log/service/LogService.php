@@ -57,8 +57,12 @@ class LogService
         set_time_limit(240);
         $num = min(50000, $num);
         static $mq;
+        $mongoConfig = Mll::app()->config->get('db.mongo');
         if ($mq === null) {
             $mq = new Amqp(Mll::app()->config->get('mq.rabbit'));
+            //判断是否能正常链接
+            $mongoConfig['database'] = 'system_log_' . date('m_d');
+            new Mongo($mongoConfig);
         }
         while ($num--) {
             $msg = $mq->getMessage('QUEUE_PHP_LOG');
@@ -72,8 +76,6 @@ class LogService
         if (!empty($logs)) {
             $logArr = self::countLogByHour($logs);
             unset($logs);
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-
             foreach ($logArr['log'] as $date => $_log) {
                 $mongoConfig['database'] = 'system_log_' . $date;
                 $mongo = new Mongo($mongoConfig);
@@ -206,8 +208,8 @@ class LogService
                 'createIndexes' => 'log',
                 'indexes' => [
                     [
-                        'key' => ['time' => -1, 'type' => 1, 'level' => 1, 'project' => 1],
-                        'name' => 'time_-1_type_1_level_1_project_1'
+                        'key' => ['type' => 1, 'level' => 1, 'project' => 1, 'time' => -1],
+                        'name' => 'type_1_level_1_project_1_time_-1'
                     ],
                     [
                         'key' => ['requestId' => 1],
