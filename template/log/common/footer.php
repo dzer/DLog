@@ -7,7 +7,7 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="/static/log/js/bootstrap.min.js"></script>
     <script src="/static/log/laydate/laydate.js"></script>
     <script src="/static/log/js/json2.js"></script>
     <script src="/static/log/js/jsonFormat.js"></script>

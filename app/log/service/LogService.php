@@ -122,8 +122,20 @@ class LogService
                 $log['content']['url'] = strlen($log['content']['url']) > 1000 ?
                     substr($log['content']['url'], 0, 1000) : $log['content']['url'];
                 $log['createTime'] = time();
+
+                $log['content']['isAjax'] = isset($log['content']['server']['HTTP_X_REQUESTED_WITH'])
+                && $log['content']['server']['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' ? 1 : 0;
+                $log['content']['requestSource'] = isset($log['content']['server']['HTTP_USER_AGENT'])
+                    ? self::checkRequestSource($log['content']['server']['HTTP_USER_AGENT']) : '';
                 $date = date('Y-m-d', intval($log['microtime']));
                 $hour = date('H', intval($log['microtime']));
+
+                if ($log['type'] == 'REQUEST' && $log['content']['isAjax'] == 0
+                    && $log['content']['requestSource'] == 'pc'
+                ) {
+                    //Mll::app()->log->debug('用户请求！', $log);
+                    $log['type'] = 'USER';
+                }
                 $key = "{$date}#{$hour}#{$log['project']}#{$log['type']}";
 
                 $countHour[$key]['set'] = [
@@ -132,6 +144,7 @@ class LogService
                     'project' => $log['project'],
                     'type' => $log['type']
                 ];
+
                 if (!isset($countHour[$key]['inc'])) {
                     $countHour[$key]['inc'] = [
                         'count' => 0,
@@ -143,7 +156,6 @@ class LogService
                 $countHour[$key]['inc']['execTime'] += $log['content']['execTime'];
                 $countHour[$key]['inc']['level_' . $log['level']] =
                     isset($countHour[$key]['inc']['level_' . $log['level']]) ? $countHour[$key]['inc']['level_' . $log['level']] + 1 : 1;
-
                 if (isset($log['content']['responseCode'])) {
                     if (is_numeric($log['content']['responseCode']) && $log['content']['responseCode'] == 0) {
                         $countHour[$key]['inc']['httpCode_0'] =
@@ -208,8 +220,8 @@ class LogService
                 'createIndexes' => 'log',
                 'indexes' => [
                     [
-                        'key' => ['type' => 1, 'level' => 1, 'project' => 1, 'time' => -1],
-                        'name' => 'type_1_level_1_project_1_time_-1'
+                        'key' => ['time' => -1, 'type' => 1, 'level' => 1, 'project' => 1],
+                        'name' => 'time_-1_type_1_level_1_project_1'
                     ],
                     [
                         'key' => ['requestId' => 1],
@@ -297,5 +309,42 @@ class LogService
         Cache::set('readLocation_' . $today, ftell($fp), 3600 * 24);
         fclose($fp);
         return $lines;
+    }
+
+    /**
+     * 判断是否为蜘蛛请求
+     *
+     * @param $userAgent
+     * @return bool
+     */
+    public static function checkRequestSource($userAgent)
+    {
+        static $kw_spiders = array('bot', 'crawl', 'spider', 'slurp', 'sohu-search', 'lycos', 'robozilla');
+        static $kw_browsers = array('mozilla', 'msie', 'netscape', 'opera', 'konqueror');
+        static $kw_mobile = array ('android', 'ios', 'wap');
+        $userAgent = strtolower($userAgent);
+        //并排除了手机端
+        if (strpos($userAgent, 'mobile') !== false || self::dstrpos($userAgent, $kw_mobile)) {
+            return 'mobile';
+        }
+        if (strpos($userAgent, 'http://') === false && self::dstrpos($userAgent, $kw_browsers)) {
+            return 'pc';
+        }
+        if (self::dstrpos($userAgent, $kw_spiders)) {
+            return 'robot';
+        }
+        return '';
+    }
+
+    public static function dstrpos($string, $arr, $returnValue = false)
+    {
+        if (empty($string)) return false;
+        foreach ((array)$arr as $v) {
+            if (strpos($string, $v) !== false) {
+                $return = $returnValue ? $v : true;
+                return $return;
+            }
+        }
+        return false;
     }
 }

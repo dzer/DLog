@@ -16,12 +16,14 @@ class ForewarningService
 
     public static function start()
     {
+        set_time_limit(200);
         self::$msg = [];
         self::$forewarningConfig = Mll::app()->config->params('forewarning');
+
         if (!empty(self::$forewarningConfig)) {
-            foreach (self::$forewarningConfig as &$config) {
+            foreach (self::$forewarningConfig as $config) {
                 if (empty($config['action']) || empty($config['enable'])) {
-                    break;
+                    continue;
                 }
                 $functionArr = explode('::', $config['action']);
                 list($class, $function) = $functionArr;

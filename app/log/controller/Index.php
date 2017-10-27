@@ -75,9 +75,12 @@ class Index extends Controller
         $countData = $logCountModel->countByHour($where, $expire, $curr_time);
         //统计错误数
         $count_error_rs = $logCountModel->countError($where, $expire, $curr_time);
+        //统计
+        $rs = $logCountModel->countByType($where, $expire, $curr_time);
 
         return $this->render('index2', [
             'countData' => $countData,
+            'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
             'statusData' => isset($status_rs[0]['result'][0]) ? $status_rs[0]['result'][0] : null,
             'count' => intval($count),
             'today_count' => $today_count,
@@ -85,7 +88,7 @@ class Index extends Controller
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'projects' => $model->getProjects($db),
-            'types' => $model->types,
+            'types' => array_merge($model->types, ['USER' => 'PC请求']),
             'servers' => $model->servers,
         ]);
     }
@@ -130,6 +133,9 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
+        if ($log_type == 'USER') {
+            $where['type'] = LOG_TYPE_FINISH;
+        }
         if (!empty($request_id)) {
             $where['requestId'] = $request_id;
         }
@@ -168,7 +174,7 @@ class Index extends Controller
                 $where['content.responseCode']['$gte'] = intval($responseCode);
                 $where['content.responseCode']['$lte'] = intval($responseCode) + 20;
             } else {
-                $where['content.responseCode']['$eq'] = $responseCode;
+                $where['content.responseCode']['$eq'] = intval($responseCode);
             }
         }
         $mongoConfig = Mll::app()->config->get('db.mongo');
@@ -428,6 +434,48 @@ class Index extends Controller
             'types' => $model->types,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
+        ]);
+    }
+
+    public function count()
+    {
+        $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
+        $log_type = Mll::app()->request->get('log_type');
+        $project = Mll::app()->request->get('project', 'all');
+
+        $_GET['curr_time'] = $curr_time;
+        $_GET['log_type'] = $log_type;
+        $_GET['project'] = $project;
+
+        $where = [];
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        }
+        if (!empty($project) && $project != 'all') {
+            $where['project'] = $project;
+        }
+        if (!empty($curr_time)) {
+            $where['date'] = $curr_time;
+        }
+        Cache::cut('file');
+        $expire = 60;
+        if ($curr_time < date('Y-m-d')) {
+            $expire = 0;
+        }
+
+        $logCountModel = new LogCountHourModel();
+        $model = new LogModel();
+        //类型统计
+        $rs = $logCountModel->countByType($where, $expire, $curr_time);
+        $db = 'system_log_' . date('m_d');
+
+        return $this->render('count', [
+            'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
+            'base_url' => '/' . Mll::app()->request->getModule()
+                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
+            'types' => array_merge($model->types, ['USER' => '用户请求']),
+            'projects' => $model->getProjects($db),
+            'servers' => $model->servers,
         ]);
     }
 }

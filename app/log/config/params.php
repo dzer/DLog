@@ -8,7 +8,7 @@ return [
         'forewarning' => [
             [
                 'action' => 'ForewarningCountService::checkMongoConnect',
-                'enable' => true,
+                'enable' => false,
                 'where' => '',
                 'sendType' => [
                     'wechat' => [
@@ -19,7 +19,7 @@ return [
             ],
             [
                 'action' => 'ForewarningCountService::checkLogRecord',
-                'enable' => true,
+                'enable' => false,
                 'time' => 5,
                 'where' => '',
                 'sendType' => [
@@ -30,8 +30,23 @@ return [
                 ]
             ],
             [
-                'action' => 'ForewarningCountService::checkLogCount',
+                'action' => 'ForewarningCountService::checkUrl',
                 'enable' => true,
+                'time' => 2,
+                'where' => ['level' => 'info', 'url' => 'meilele.com'],
+                'count' => [
+                    'number' => 1, //次数
+                ],
+                'msg' => '易宝查询接口出现错误',
+                'sendType' => [
+                    'wechat' => [
+                        '18581855415',
+                    ],
+                ]
+            ],
+            [
+                'action' => 'ForewarningCountService::checkLogCount',
+                'enable' => false,
                 'time' => 5,
                 'where' => [
                     [

@@ -208,7 +208,60 @@ class LogCountHourModel extends Model
         } else {
             $count_rs = json_decode($count_rs, true);
         }
-        return $count_rs;
 
+        return $count_rs;
     }
+
+    public function countByType($where, $expire = 600, $curr_time)
+    {
+        if (isset($where['type'])) {
+            unset($where['type']);
+        }
+        $countArr = [
+            'aggregate' => 'log_count_hour',
+            'pipeline' => [
+                ['$match' => $where],
+                [
+                    '$group' => [
+                        '_id' => [
+                            'type' => '$type',
+                        ],
+                        'count' => ['$sum' => '$count'],
+                        'execTime' => ['$sum' => '$execTime'],
+                        'info' => ['$sum' => '$level_info'],
+                        'warning' => ['$sum' => '$level_warning'],
+                        'error' => ['$sum' => '$level_error'],
+                        'notice' => ['$sum' => '$level_notice'],
+                        'httpCode_0' => ['$sum' => '$httpCode_0'],
+                        'httpCode_200' => ['$sum' => '$httpCode_200'],
+                        'httpCode_300' => ['$sum' => '$httpCode_300'],
+                        'httpCode_400' => ['$sum' => '$httpCode_400'],
+                        'httpCode_500' => ['$sum' => '$httpCode_500'],
+                        'execTime_200' => ['$sum' => '$execTime_200'],
+                        'execTime_500' => ['$sum' => '$execTime_500'],
+                        'execTime_1000' => ['$sum' => '$execTime_1000'],
+                        'execTime_5000' => ['$sum' => '$execTime_5000'],
+                        'execTime_5000+' => ['$sum' => '$execTime_5000+'],
+                    ]
+                ],
+                ['$sort' => ['count' => -1]],
+            ]
+        ];
+        $project = isset($where['project']) ? $where['project'] : '';
+        $cache_key = 'log2_count_type_rs_' . $project . '_' . $curr_time;
+        $count_rs = Cache::get($cache_key);
+        if (1||$count_rs === false) {
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongo = new Mongo($mongoConfig);
+            $count_rs = $mongo->executeCommand($countArr);
+            $count_rs = Common::objectToArray($count_rs);
+            Cache::set($cache_key, json_encode($count_rs), $expire);
+        } else {
+            $count_rs = json_decode($count_rs, true);
+        }
+
+        return $count_rs;
+    }
+
 }

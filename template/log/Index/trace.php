@@ -149,7 +149,6 @@
     </div>
     <script>
         var rs = <?= $info ?>;
-        console.log(rs);
         function showData(id) {
             var str = '<tr><td>Time</td> <td>' + rs[id]['time'] + '</td></tr>'
                 +'<tr><td>URL</td><td style="word-break: break-all">' + rs[id]['content']['url'] + '</td></tr><tr>'

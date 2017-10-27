@@ -33,16 +33,66 @@ include(__DIR__ . '/../common/header.php')
                     <input type="text" name="curr_time" class="form-control" placeholder="时间"
                            onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['curr_time']) ? $_GET['curr_time'] : ''?>">
                 </div>
-                <div class="form-group" style="margin-left: 10px">
-                    <label>日志类型：</label>
-                    <select name="log_type" class="form-control">
-                        <option value="">请选择</option>
-                        <?= Common::optionHtml($types, 'log_type');?>
-                    </select>
-                </div>
+
                 <button type="submit" class="btn btn-default" style="margin-left: 10px">搜索</button>
                 <a type="submit" href="<?= $base_url ?>" class="btn btn-default" style="margin-left: 10px">重置</a>
             </form>
+        </div>
+        <div class="col-md-12" style="margin-top: 15px">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>日志类型</th>
+                    <th>记录次数</th>
+                    <th>平均执行时间(ms)</th>
+                    <th>ERROR</th>
+                    <th>WARNING</th>
+                    <th>NOTICE</th>
+                    <th>http状态码(0)</th>
+                    <th>http状态码(400)</th>
+                    <th>http状态码(500)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+                if (isset($rs)) {
+                    foreach ($rs as $v) {
+                        ?>
+                        <tr>
+                            <td><?= isset($types[$v['_id']['type']]) ? $types[$v['_id']['type']] : ''?></td>
+                            <td><?= $v['count']?></td>
+                            <td><?= sprintf('%.1f', ($v['count'] > 0 ? ($v['execTime']/$v['count']) * 1000 : '')) ?> ms</td>
+                            <td>
+                                <a style="<?= $v['error'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                   href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=error&log_type=<?= $v['_id']['type']?>"><?= $v['error']?></a>
+                            </td>
+                            <td>
+                                <a style="<?= $v['warning'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                   href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=warning&log_type=<?= $v['_id']['type']?>"><?= $v['warning']?></a>
+                            </td>
+                            <td>
+                                <a style="<?= $v['notice'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                   href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=notice&log_type=<?= $v['_id']['type']?>"><?= $v['notice']?></a>
+                            </td>
+                            <td>
+                                <a style="<?= $v['httpCode_0'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                   href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&responseCode=0&log_type=<?= $v['_id']['type']?>"><?= $v['httpCode_0']?></a>
+                            </td>
+                            <td>
+                                <a style="<?= $v['httpCode_400'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                   href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&responseCode=400&log_type=<?= $v['_id']['type']?>"><?= $v['httpCode_400']?></a>
+                            </td>
+                            <td>
+                                <a style="<?= $v['httpCode_500'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
+                                   href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&responseCode=500&log_type=<?= $v['_id']['type']?>"><?= $v['httpCode_500']?></a>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                }
+                ?>
+                </tbody>
+            </table>
         </div>
         <div class="col-md-12">
             <div class="row">
@@ -53,42 +103,10 @@ include(__DIR__ . '/../common/header.php')
                     <div id="exec_time" style="min-width:250px;height:250px;"></div>
                 </div>
                 <div class="col-md-4">
-                    <h4>报错统计</h4>
+                    <h4>报警信息</h4>
                     <table class="table table-striped table-hover">
-                        <thead>
-                        <tr>
-                            <th>类型</th>
-                            <th>记录次数</th>
-                            <th>ERROR</th>
-                            <th>WARNING</th>
-                            <th>NOTICE</th>
-                        </tr>
-                        </thead>
                         <tbody>
-                        <?php
-                        if (isset($count_error)) {
-                            foreach ($count_error as $v) {
-                                ?>
-                                <tr>
-                                    <td><?= isset($types[$v['_id']['type']]) ? $types[$v['_id']['type']] : ''?></td>
-                                    <td><?= $v['count']?></td>
-                                    <td>
-                                        <a style="<?= $v['error'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
-                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=error&log_type=<?= $v['_id']['type']?>"><?= $v['error']?></a>
-                                    </td>
-                                    <td>
-                                        <a style="<?= $v['warning'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
-                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=warning&log_type=<?= $v['_id']['type']?>"><?= $v['warning']?></a>
-                                    </td>
-                                    <td>
-                                        <a style="<?= $v['notice'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"
-                                           href="/log/Index/just?project=<?= $_GET['project'] ?>&start_time=<?= $_GET['curr_time'] . ' 00:00:00'?>&end_time=<?= $_GET['curr_time'] . ' 23:59:59'?>&log_level=notice&log_type=<?= $v['_id']['type']?>"><?= $v['notice']?></a>
-                                    </td>
-                                </tr>
-                                <?php
-                            }
-                        }
-                        ?>
+
                         </tbody>
                     </table>
                 </div>
@@ -100,9 +118,9 @@ include(__DIR__ . '/../common/header.php')
         </div>
     </div>
 </div> <!-- /container -->
-<script src="https://img.hcharts.cn/highcharts/highcharts.js"></script>
-<script src="https://img.hcharts.cn/highcharts/modules/exporting.js"></script>
-<script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+<script src="/static/log/js/highcharts.js"></script>
+<script src="/static/log/js/exporting.js"></script>
+<script src="/static/log/js/highcharts-zh_CN.js"></script>
 <script>
     $(function () {
         $('#container').highcharts({
@@ -166,9 +184,9 @@ include(__DIR__ . '/../common/header.php')
             legend: {
                 layout: 'vertical',
                 align: 'left',
-                x: 120,
+                x: 100,
                 verticalAlign: 'top',
-                y: 100,
+                y: 50,
                 floating: true,
                 backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
             },
