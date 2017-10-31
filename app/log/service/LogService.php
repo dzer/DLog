@@ -237,6 +237,7 @@ class LogService
                     ],
                 ]
             ]);
+            $mongo->setDBName('system_log');
             $mongo->executeCommand([
                 'createIndexes' => 'log_count_hour',
                 'indexes' => [
