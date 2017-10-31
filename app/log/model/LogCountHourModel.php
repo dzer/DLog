@@ -84,7 +84,7 @@ class LogCountHourModel extends Model
         $status_rs = Cache::get($cache_key);
         if ($status_rs === false) {
             $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongoConfig['database'] = 'system_log';
             $mongo = new Mongo($mongoConfig);
             $status_rs = $mongo->executeCommand($statusArr);
             $status_rs = Common::objectToArray($status_rs);
@@ -130,7 +130,7 @@ class LogCountHourModel extends Model
         $countData = Cache::get($cache_key);
         if ($countData === false) {
             $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongoConfig['database'] = 'system_log';
             $mongo = new Mongo($mongoConfig);
             $count_rs = $mongo->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
@@ -200,7 +200,7 @@ class LogCountHourModel extends Model
         $count_rs = Cache::get($cache_key);
         if ($count_rs === false) {
             $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongoConfig['database'] = 'system_log';
             $mongo = new Mongo($mongoConfig);
             $count_rs = $mongo->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
@@ -252,7 +252,7 @@ class LogCountHourModel extends Model
         $count_rs = Cache::get($cache_key);
         if (1||$count_rs === false) {
             $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($curr_time));
+            $mongoConfig['database'] = 'system_log';
             $mongo = new Mongo($mongoConfig);
             $count_rs = $mongo->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);

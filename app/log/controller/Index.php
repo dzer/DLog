@@ -53,19 +53,12 @@ class Index extends Controller
         $logCountModel = new LogCountHourModel();
 
         if (isset($_GET['count']) || $count === false) {
-            $db = 'system_log_' . date('m_d', strtotime('-1 day'));
-            $countOne = $logCountModel->sumField($db,'$count', ['date' => ['$lt' => date('Y-m-d')], null]);
-            $db = 'system_log_' . date('m_d', strtotime('-2 day'));
-            $countTwo = $logCountModel->sumField($db,'$count', ['date' => ['$lt' => date('Y-m-d')], null]);
-            $db = 'system_log_' . date('m_d', strtotime('-3 day'));
-            $countThree = $logCountModel->sumField($db,'$count', ['date' => ['$lt' => date('Y-m-d')], null]);
-            $count = $countOne + $countTwo + $countThree;
+            $count = $logCountModel->sumField('system_log', '$count', ['date' => ['$lt' => date('Y-m-d')], null]);
             Cache::set($cache_key, $count, 0);
         }
 
         //今日日志量
-        $db = 'system_log_' . date('m_d');
-        $today_count = $logCountModel->sumField($db,'$count', ['date' => ['$gte' => date('Y-m-d')], null]);
+        $today_count = $logCountModel->sumField('system_log', '$count', ['date' => ['$gte' => date('Y-m-d')], null]);
 
         $count += $today_count;
         $model = new LogModel();
@@ -87,7 +80,7 @@ class Index extends Controller
             'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
-            'projects' => $model->getProjects($db),
+            'projects' => $model->getProjects('system_log'),
             'types' => array_merge($model->types, ['USER' => 'PC请求']),
             'servers' => $model->servers,
         ]);
@@ -467,7 +460,7 @@ class Index extends Controller
         $model = new LogModel();
         //类型统计
         $rs = $logCountModel->countByType($where, $expire, $curr_time);
-        $db = 'system_log_' . date('m_d');
+        $db = 'system_log_';
 
         return $this->render('count', [
             'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,

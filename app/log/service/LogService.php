@@ -89,7 +89,7 @@ class LogService
 
             if (!empty($logArr['countHour'])) {
                 foreach ($logArr['countHour'] as $date => $_log) {
-                    $mongoConfig['database'] = 'system_log_' . $date;
+                    $mongoConfig['database'] = 'system_log';
                     $mongo = new Mongo($mongoConfig);
                     $mongo->selectCollection('log_count_hour');
                     foreach ($_log as $k => $v) {
