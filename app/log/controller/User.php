@@ -21,7 +21,7 @@ class User extends Controller
     public function beforeAction()
     {
         parent::beforeAction();
-        if (in_array(Mll::app()->request->getAction(), ['setting'])) {
+        if (in_array(Mll::app()->request->getAction(), ['setting', 'member', 'add', 'update', 'delete'])) {
             if (!isset($_SESSION['userInfo']['email'])) {
                 return $this->redirect('/log/User/login');
             }
