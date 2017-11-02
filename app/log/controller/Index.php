@@ -24,10 +24,8 @@ class Index extends Controller
     public function beforeAction()
     {
         parent::beforeAction();
-        if (in_array(Mll::app()->request->getAction(), ['index', 'just', 'just2', 'trace', 'rank', 'count'])) {
-            if (!isset($_SESSION['userInfo']['email'])) {
-                return $this->redirect('/log/User/login');
-            }
+        if (!isset($_SESSION['userInfo']['email'])) {
+            return $this->redirect('/log/User/login');
         }
         return true;
     }
