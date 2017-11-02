@@ -13,13 +13,15 @@ use Mll\Mll;
 
 class Index extends Controller
 {
-    public function __construct()
+    public function beforeAction()
     {
-        if (!Mll::app()->config->params('log_auth', true) || (isset($_GET['admin']) && $_GET['admin'] == '2253dsag23&^') || (isset($_SESSION['admin']) && $_SESSION['admin'] == 1)) {
-            $_SESSION['admin'] = 1;
-        } else {
-            exit('没有权限');
+        parent::beforeAction();
+        if (in_array(Mll::app()->request->getAction(), ['index', 'just', 'just2', 'trace', 'rank', 'count'])) {
+            if (!isset($_SESSION['userInfo']['email'])) {
+                return $this->redirect('/log/User/login');
+            }
         }
+        return true;
     }
 
     public function index()
@@ -335,7 +337,9 @@ class Index extends Controller
         //traceId排序
         $rs = LogService::traceLogVersionSort($rs);
         $mainRequest = reset($rs);
-        if (!isset($_GET['param']) && Mll::app()->config->params('log_param_close', 'true')) {
+        if (!isset($_SESSION['userInfo']['role'])
+            || ($_SESSION['userInfo']['role'] != 'admin' && $_SESSION['userInfo']['role'] != 'manager')
+        ) {
             foreach ($rs as $k => $_rs) {
                 $rs[$k]['content']['requestParams'] = '';
             }

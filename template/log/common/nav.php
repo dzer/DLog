@@ -21,20 +21,23 @@
                 <li class="<?= $action == 'rank' ? 'active' : ''?>"><a href="/log/Index/rank">性能排行</a></li>
                 <li class="<?= $action == 'count' ? 'active' : ''?>"><a href="/log/Index/count">日志统计</a></li>
                 <!--<li><a href="#">异常统计</a></li>-->
-                <!--<li><a href="#contact">Contact</a></li>
-                <li class="dropdown">
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown navbar-right">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                       aria-expanded="false">Dropdown <span class="caret"></span></a>
+                       aria-expanded="false"><strong><?= $_SESSION['userInfo']['email'] ?? '' ?></strong> <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#">Action</a></li>
-                        <li><a href="#">Another action</a></li>
-                        <li><a href="#">Something else here</a></li>
+                        <li><a href="/log/User/setting">个人设置</a></li>
+                        <?php
+                            if (isset($_SESSION['userInfo']['role']) && $_SESSION['userInfo']['role'] == 'admin') {
+                                echo '<li><a href="/log/User/member">成员列表</a></li>';
+                            }
+                        ?>
                         <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Nav header</li>
-                        <li><a href="#">Separated link</a></li>
-                        <li><a href="#">One more separated link</a></li>
+                       <!-- <li class="dropdown-header">Nav header</li>-->
+                        <li><a href="/log/User/logout">退出登录</a></li>
                     </ul>
-                </li>-->
+                </li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>

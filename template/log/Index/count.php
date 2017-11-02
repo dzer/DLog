@@ -98,33 +98,6 @@
                     ?>
                     </tbody>
                 </table>
-                <nav aria-label="Page navigation" class="pull-right">
-                    <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个调用次数</div>
-                    <ul class="pagination">
-                        <?php
-                        if (!empty($page)) {
-                            if ($page['page'] > 1) {
-                                $_GET['page'] = $page['page'] - 1;
-                                ?>
-                                <li>
-                                    <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Previous">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </a>
-                                </li>
-                                <?php
-                            }
-                            $_GET['page'] = $page['page'] + 1;
-                            ?>
-                            <li>
-                                <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            <?php
-                        }
-                        ?>
-                    </ul>
-                </nav>
             </div>
         </div>
     </div> <!-- /container -->
