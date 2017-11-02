@@ -237,7 +237,7 @@ class LogService
                     ],
                 ]
             ]);
-            $mongo->setDBName('system_log');
+            /*$mongo->setDBName('system_log');
             $mongo->executeCommand([
                 'createIndexes' => 'log_count_hour',
                 'indexes' => [
@@ -246,7 +246,7 @@ class LogService
                         'name' => 'date_-1_project_1_type_1'
                     ],
                 ]
-            ]);
+            ]);*/
             $mongo->setDBName('system_log_' . date('m_d', strtotime('-4 day')));
             $mongo->executeCommand(['dropDatabase' => 1]);
             Cache::set($cacheKey, 1, 86400);

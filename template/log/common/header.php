@@ -12,7 +12,7 @@
     <title>DLog调试性能分析系统</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/log/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
     <link href="/static/log/css/bootstrap-theme.min.css" rel="stylesheet">
 

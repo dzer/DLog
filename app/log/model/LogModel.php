@@ -44,6 +44,7 @@ class LogModel extends Model
         'web_php_07' => 'web_php_07',
         'web_php_08' => 'web_php_08',
         'web_php_13' => 'web_php_13',
+        'web_php_16' => 'web_php_16',
     ];
 
     public function getProjects($db, $expire = 86400)
@@ -302,6 +303,7 @@ class LogModel extends Model
      * @param array $where 条件
      * @param integer $page 页码
      * @param integer $page_size 条数
+     * @param string $sort 排序
      * @return array|object
      */
     function countRank($db, array $where, $page, $page_size, $sort = 'time')

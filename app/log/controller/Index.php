@@ -13,21 +13,15 @@ use Mll\Mll;
 
 class Index extends Controller
 {
-    const TIME_HOUR = 1;
-
-    const TIME_DAY = 2;
-
-    const YEAR_MONTH_COUNT = 12;
-
-    static $filter = array('type','_id');
-
-    public function __construct()
+    public function beforeAction()
     {
-        if (!Mll::app()->config->params('log_auth', true) || (isset($_GET['admin']) && $_GET['admin'] == '2253dsag23&^') || (isset($_SESSION['admin']) && $_SESSION['admin'] == 1)) {
-            $_SESSION['admin'] = 1;
-        } else {
-            exit('没有权限');
+        parent::beforeAction();
+        if (in_array(Mll::app()->request->getAction(), ['index', 'just', 'just2', 'trace', 'rank', 'count'])) {
+            if (!isset($_SESSION['userInfo']['email'])) {
+                return $this->redirect('/log/User/login');
+            }
         }
+        return true;
     }
 
     public function index()
@@ -343,7 +337,9 @@ class Index extends Controller
         //traceId排序
         $rs = LogService::traceLogVersionSort($rs);
         $mainRequest = reset($rs);
-        if (!isset($_GET['param']) && Mll::app()->config->params('log_param_close', 'true')) {
+        if (!isset($_SESSION['userInfo']['role'])
+            || ($_SESSION['userInfo']['role'] != 'admin' && $_SESSION['userInfo']['role'] != 'manager')
+        ) {
             foreach ($rs as $k => $_rs) {
                 $rs[$k]['content']['requestParams'] = '';
             }
@@ -480,21 +476,22 @@ class Index extends Controller
         ]);
     }
 
-    public function statistics(){
-        $time_y = Mll::app()->request->get('time-year','');
+    public function statistics()
+    {
+        $time_y = Mll::app()->request->get('time-year', '');
         $time_m = Mll::app()->request->get('time-month', '');
         $time_d = Mll::app()->request->get('time-day', '');
         $project = Mll::app()->request->get('project', '');
         $log_type = Mll::app()->request->get('log_type', '');
 
         $where = $ret = [];
-        if (!empty($project) && 'all' != $project){
+        if (!empty($project) && 'all' != $project) {
             $where['project'] = $project;
         }
-        if (!empty($log_type)){
+        if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
-        if(!$time_y && !$time_m && !$time_d){
+        if (!$time_y && !$time_m && !$time_d) {
             $time_y = date('Y');
             $time_m = date('m');
             $time_d = date('d');
@@ -503,20 +500,20 @@ class Index extends Controller
         $logCountModel = new LogCountHourModel();
         switch (true) {
             case $time_y && !$time_m && !$time_d: //月
-                $s = '^'.$time_y;
+                $s = '^' . $time_y;
                 $where['date'] = new \MongoDB\BSON\Regex($s);
                 $result = $logCountModel->statistics([
                     'w' => $where,
                     'g' => [
                         'type' => '$type',
-                        'date' => ['$substr' => ['$date',5,2]],
+                        'date' => ['$substr' => ['$date', 5, 2]],
                     ],
                     's' => ['_id.date' => 1]
                 ]);
                 $ret = $this->s_month($result);
                 break;
             case $time_y && $time_m && !$time_d: //天
-                $s = '^'.$time_y.'-'.$time_m;
+                $s = '^' . $time_y . '-' . $time_m;
                 $where['date'] = new \MongoDB\BSON\Regex($s);
                 $result = $logCountModel->statistics([
                     'w' => $where,
@@ -526,10 +523,10 @@ class Index extends Controller
                     ],
                     's' => ['_id.date' => 1]
                 ]);
-                $ret = $this->s_day($result,$time_y.'-'.$time_m);
+                $ret = $this->s_day($result, $time_y . '-' . $time_m);
                 break;
             case $time_y && $time_m && $time_d: //小时
-                $where['date'] = $time_y.'-'.$time_m.'-'.$time_d;
+                $where['date'] = $time_y . '-' . $time_m . '-' . $time_d;
                 $result = $logCountModel->statistics([
                     'w' => $where,
                     'g' => [
@@ -540,7 +537,8 @@ class Index extends Controller
                 ]);
                 $ret = $this->s_hour($result);
                 break;
-            default:;
+            default:
+                ;
         }
         $model = new LogModel();
         $db = 'system_log';
@@ -558,76 +556,80 @@ class Index extends Controller
         ]);
     }
 
-    private function s_month($result){
+    private function s_month($result)
+    {
         $info = [];
         $initArr = [];
-        foreach($result as $key=>$val){
-            foreach($val as $k=>$v){
-                if(in_array($k,self::$filter))continue;
-                if(!isset($initArr[$k.$val['type']])){
-                    $info[$k][$val['type']] = self::Tpl(self::YEAR_MONTH_COUNT,1);
-                    $initArr[$k.$val['type']] = 1;
+        foreach ($result as $key => $val) {
+            foreach ($val as $k => $v) {
+                if (in_array($k, self::$filter)) continue;
+                if (!isset($initArr[$k . $val['type']])) {
+                    $info[$k][$val['type']] = self::Tpl(self::YEAR_MONTH_COUNT, 1);
+                    $initArr[$k . $val['type']] = 1;
                 }
-                if('execTime' == $k && $val['count']){
-                    $v = $v/$val['count'] * 1000;
+                if ('execTime' == $k && $val['count']) {
+                    $v = $v / $val['count'] * 1000;
                 }
-                $v = sprintf("%.2f",$v);
+                $v = sprintf("%.2f", $v);
                 $info[$k][$val['_id']['type']][intval($val['_id']['date'])] = $v;
             }
         }
         unset($result);
 
-        return $this->buildEsData($info,range(1,self::YEAR_MONTH_COUNT));
+        return $this->buildEsData($info, range(1, self::YEAR_MONTH_COUNT));
     }
 
-    private function s_day($result,$m){
+    private function s_day($result, $m)
+    {
         $info = [];
         $initArr = [];
-        foreach($result as $key=>$val){
-            foreach($val as $k=>$v){
-                if(in_array($k,self::$filter))continue;
-                if(!isset($initArr[$k.$val['type']])){
-                    $info[$k][$val['type']] = self::Tpl(self::dayInMonth($m),1);
-                    $initArr[$k.$val['type']] = 1;
+        foreach ($result as $key => $val) {
+            foreach ($val as $k => $v) {
+                if (in_array($k, self::$filter)) continue;
+                if (!isset($initArr[$k . $val['type']])) {
+                    $info[$k][$val['type']] = self::Tpl(self::dayInMonth($m), 1);
+                    $initArr[$k . $val['type']] = 1;
                 }
-                if('execTime' == $k && $val['count']){
-                    $v = $v/$val['count'] * 1000;
+                if ('execTime' == $k && $val['count']) {
+                    $v = $v / $val['count'] * 1000;
                 }
-                $v = sprintf("%.2f",$v);
-                $info[$k][$val['type']][intval(date('d',strtotime($val['_id']['date'])))] = $v;
+                $v = sprintf("%.2f", $v);
+                $info[$k][$val['type']][intval(date('d', strtotime($val['_id']['date'])))] = $v;
             }
         }
         unset($result);
 
-        return $this->buildEsData($info,self::fullDay($m));
+        return $this->buildEsData($info, self::fullDay($m));
     }
 
-    private function s_hour($result){
+    private function s_hour($result)
+    {
         $info = [];
         $initArr = [];
-        foreach($result as $key=>$val){
-            foreach($val as $k=>$v){
-                if(in_array($k,self::$filter))continue;
-                if(!isset($initArr[$k.$val['type']])){
+        foreach ($result as $key => $val) {
+            foreach ($val as $k => $v) {
+                if (in_array($k, self::$filter)) continue;
+                if (!isset($initArr[$k . $val['type']])) {
                     $info[$k][$val['type']] = self::tpl();
-                    $initArr[$k.$val['type']] = 1;
+                    $initArr[$k . $val['type']] = 1;
                 }
-                if('execTime' == $k && $val['count']){
-                    $v = $v/$val['count'] * 1000;
+                if ('execTime' == $k && $val['count']) {
+                    $v = $v / $val['count'] * 1000;
                 }
-                $v = sprintf("%.2f",$v);
+                $v = sprintf("%.2f", $v);
                 $info[$k][$val['type']][intval($val['_id']['hour'])] = $v;
             }
         }
         unset($result);
 
-        return $this->buildEsData($info,self::fullHour());
+        return $this->buildEsData($info, self::fullHour());
     }
 
-    private function buildEsData($info,$x){
+    private function buildEsData($info, $x)
+    {
         $data = $lenData = [];
-        foreach($info as $key=>$val){
-            foreach($val as $k=>$v){
+        foreach ($info as $key => $val) {
+            foreach ($val as $k => $v) {
                 $per = [
                     'name' => $k,
                     'type' => 'line',
@@ -646,19 +648,23 @@ class Index extends Controller
         ];
     }
 
-    static function fullDay($m){
-        return range(1,self::dayInMonth($m));
+    static function fullDay($m)
+    {
+        return range(1, self::dayInMonth($m));
     }
 
-    static function dayInMonth($m){
+    static function dayInMonth($m)
+    {
         return date('t', strtotime($m));
     }
 
-    static function fullHour(){
-        return range(0,23);
+    static function fullHour()
+    {
+        return range(0, 23);
     }
 
-    static function tpl($len = 24 ,$start=0,$val=0){
-        return array_fill($start,$len,$val);
+    static function tpl($len = 24, $start = 0, $val = 0)
+    {
+        return array_fill($start, $len, $val);
     }
 }

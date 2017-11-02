@@ -121,6 +121,7 @@ class ForewarningCountService
                 $servers[] = $_list['_id']['server'];
             }
         }
+        unset($model->servers['web_php_16']);
         $diff_servers = array_diff($model->servers, $servers);
 
         if (!empty($diff_servers)) {
