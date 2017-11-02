@@ -10,6 +10,11 @@ use Mll\Common\Common;
 
 class LogCountHourModel extends Model
 {
+    static $mongo;
+
+    const LOG_HOUR_COUNT_DB = 'system_log';
+    const LOG_HOUR_COUNT_TABLE = 'log_count_hour';
+
     /**
      * 按条件统计数量
      *
@@ -263,5 +268,84 @@ class LogCountHourModel extends Model
 
         return $count_rs;
     }
+
+    public function typeCount($where){
+        $where = [
+            'date' => '2017-11-01'
+        ];
+        $options = [
+            'sort' => [
+                'hour' => 1
+            ]
+        ];
+
+        $query = self::buildQuery([
+            'wh' => $where,
+            'opt' => $options,
+        ]);
+        $cursor = self::getMongo()->mongo->executeQuery(self::LOG_HOUR_COUNT_DB.'.'.self::LOG_HOUR_COUNT_TABLE, $query);
+        $result = [];
+        foreach ($cursor as $document) {
+            $document = Common::objectToArray($document);
+            $result[$document['project']][$document['type']][] = $document;
+        }
+
+        return $result;
+    }
+
+    public function statistics($args){
+        $countArr = [
+            'aggregate' => self::LOG_HOUR_COUNT_TABLE,
+            'pipeline' => [
+                ['$match' => $args['w']],
+                [
+                    '$group' => [
+                        '_id' => $args['g'],
+                        'count' => ['$sum' => '$count'],
+                        'type' => ['$first'=>'$type'],
+//                        'hour' => ['$first'=>'$hour'],
+                        'execTime' => ['$sum' => '$execTime'],
+                        'info' => ['$sum' => '$level_info'],
+                        'warning' => ['$sum' => '$level_warning'],
+                        'error' => ['$sum' => '$level_error'],
+                        'notice' => ['$sum' => '$level_notice'],
+                        'httpCode_0' => ['$sum' => '$httpCode_0'],
+                        'httpCode_200' => ['$sum' => '$httpCode_200'],
+                        'httpCode_300' => ['$sum' => '$httpCode_300'],
+                        'httpCode_400' => ['$sum' => '$httpCode_400'],
+                        'httpCode_500' => ['$sum' => '$httpCode_500'],
+                        'execTime_200' => ['$sum' => '$execTime_200'],
+                        'execTime_500' => ['$sum' => '$execTime_500'],
+                        'execTime_1000' => ['$sum' => '$execTime_1000'],
+                        'execTime_5000' => ['$sum' => '$execTime_5000'],
+                        'execTime_5000+' => ['$sum' => '$execTime_5000+'],
+                    ],
+                ],
+                ['$sort' => $args['s']],
+            ]
+        ];
+        $count_rs = self::getMongo()->executeCommand($countArr);
+        $count_rs = Common::objectToArray($count_rs);
+
+        return isset($count_rs[0]['result']) ? $count_rs[0]['result'] : array();
+    }
+
+
+    static function buildQuery($args){
+        return new \MongoDB\Driver\Query($args['wh'], $args['opt']);
+    }
+
+    static function getMongo(){
+        if(self::$mongo){
+            return self::$mongo;
+        }
+        $mongoConfig = Mll::app()->config->get('db.mongo');
+        $mongoConfig['database'] = 'system_log';
+        self::$mongo = new Mongo($mongoConfig);
+        return self::$mongo;
+    }
+
+
+
 
 }
