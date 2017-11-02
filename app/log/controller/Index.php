@@ -575,8 +575,8 @@ class Index extends Controller
                 }
                 if ('execTime' == $k && $val['count']) {
                     $v = $v / $val['count'] * 1000;
+                    $v = sprintf("%.2f", $v);
                 }
-                $v = sprintf("%.2f", $v);
                 $info[$k][$val['_id']['type']][intval($val['_id']['date'])] = $v;
             }
         }
@@ -636,6 +636,7 @@ class Index extends Controller
         $data = $lenData = [];
         foreach ($info as $key => $val) {
             foreach ($val as $k => $v) {
+                if(!$k)continue;
                 $per = [
                     'name' => $k,
                     'type' => 'line',
@@ -643,7 +644,7 @@ class Index extends Controller
                 ];
                 $data[$key][] = $per;
             }
-            $lenData[$key] = array_keys($val);
+            $lenData[$key] = array_values(array_filter(array_keys($val)));
         }
         unset($info);
 
