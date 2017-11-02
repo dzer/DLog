@@ -495,8 +495,9 @@ class Index extends Controller
             $where['type'] = $log_type;
         }
         if(!$time_y && !$time_m && !$time_d){
-            $_GET['time-year'] = $time_y = date('Y');
-            $_GET['time-month'] = $time_m = date('m');
+            $time_y = date('Y');
+            $time_m = date('m');
+            $time_d = date('d');
         }
 
         $logCountModel = new LogCountHourModel();

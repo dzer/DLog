@@ -29,7 +29,7 @@ include(__DIR__ . '/../common/header.php')
                     <input class="time-input form-control" id="time-input-day" size="2" type="text" name="time-day" value="<?= $_g['time-day']?>" >
                     <span class="add-on"><i class="icon-th"></i></span>
 
-                    <a href="#" id="tip" class="btn btn-large btn-success" title="TIPS" data-placement="bottom"  data-toggle="popover" title="" data-content="选择年:横轴为月;选择年月：横轴为天;选择年月日:横轴为小时" data-original-title="A Title">时间搜索提示</a>
+                    <a href="#" id="tip" class="btn btn-large btn-success" title="TIPS" data-placement="bottom"  data-toggle="popover" title="" data-content="选择年:横轴为月;选择年月：横轴为天;选择年月日:横轴为小时(默认为当天)" data-original-title="A Title">时间搜索提示</a>
 
                 </div>
                <!-- <div class="form-group" style="margin-left: 10px">
