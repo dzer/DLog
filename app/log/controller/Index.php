@@ -13,6 +13,14 @@ use Mll\Mll;
 
 class Index extends Controller
 {
+    const TIME_HOUR = 1;
+
+    const TIME_DAY = 2;
+
+    const YEAR_MONTH_COUNT = 12;
+
+    static $filter = array('type','_id');
+    
     public function beforeAction()
     {
         parent::beforeAction();
