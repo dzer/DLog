@@ -29,10 +29,10 @@ include(__DIR__ . '/../common/header.php')
                     <input class="time-input form-control" id="time-input-day" size="2" type="text" name="time-day" value="<?= $_g['time-day']?>" >
                     <span class="add-on"><i class="icon-th"></i></span>
 
-                    <a href="#" id="tip" class="btn btn-large btn-success" title="TIPS" data-placement="bottom"  data-toggle="popover" title="" data-content="选择年:横轴为月;选择年月：横轴为天;选择年月日:横轴为小时(默认为当天)" data-original-title="A Title">时间搜索提示</a>
+                    <a href="#" id="tip" class="btn btn-large btn-success" title="TIPS" data-placement="bottom"  data-toggle="popover" title="" data-content="选择年:横轴为月;选择年月：横轴为天;选择年月日:横轴为小时(默认为小时)" data-original-title="A Title">时间搜索提示</a>
 
                 </div>
-               <!-- <div class="form-group" style="margin-left: 10px">
+                <!-- <div class="form-group" style="margin-left: 10px">
                     <label>时间：</label>
                     <input type="text" name="curr_time" class="form-control" placeholder="时间"
                            onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?/*= isset($_GET['curr_time']) ? $_GET['curr_time'] : ''*/?>">
@@ -59,6 +59,7 @@ include(__DIR__ . '/../common/header.php')
 
 
             <div class="row">
+                <div id="count" style="width: 100%;height:200px;"></div>
                 <div id="exec-time" style="width: 100%;height:200px;"></div>
                 <div id="error" style="width: 100%;height:200px;"></div>
                 <div id="warning" style="width: 100%;height:200px;"></div>
@@ -124,6 +125,58 @@ include(__DIR__ . '/../common/header.php')
             echarts: 'http://echarts.baidu.com/build/dist'
         }
     });
+
+    require(
+        [
+            'echarts',
+            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
+            'echarts/chart/bar'
+        ],
+        function (ec) {
+            var myChart = ec.init(document.getElementById('count'));
+            var   option = {
+                title: {
+                    text: '请求量',
+                    textStyle : {
+                        fontSize: 16,
+                        fontWeight: 'bolder',
+                        color: '#5cb85c'
+                    }
+                },
+                tooltip : {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data:<?= json_encode($lenData['count']); ?>
+                },
+                toolbox: {
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                calculable : true,
+                xAxis : [
+                    {
+                        type : 'category',
+                        boundaryGap : false,
+                        data : <?= json_encode($x); ?>
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value'
+                    }
+                ],
+                series : <?= json_encode($data['count']); ?>
+            };
+            myChart.setOption(option);
+        }
+    );
 
     require(
         [
