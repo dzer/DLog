@@ -2,7 +2,6 @@
 
 namespace app\log\service;
 
-use app\common\helpers\Common;
 use app\log\model\LogModel;
 use Mll\Common\Amqp;
 use Mll\Db\Mongo;

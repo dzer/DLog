@@ -48,11 +48,13 @@ class UserModel extends Model
         if (!empty($rs[0])) {
             $userInfo = $rs[0];
             if ($this->validatePassword($password, $userInfo['password'])) {
+                session_start();
                 $_SESSION['userInfo'] = [
                     'userId' => $userInfo['_id']['oid'],
                     'email' => $userInfo['email'],
                     'role' => $userInfo['role'],
                 ];
+                session_write_close();
                 return true;
             }
         }
