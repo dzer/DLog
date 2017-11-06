@@ -59,7 +59,7 @@ class LogModel extends Model
                         'count' => 1
                     ]
                 ],
-                ['$match' => ['date' => ['$gte' => date('Y-m-d 00:00:00', strtotime('-3 day'))]]],
+                ['$match' => ['date' => ['$gte' => date('Y-m-d', strtotime('-3 day'))]]],
                 [
                     '$group' => [
                         '_id' => [
