@@ -551,7 +551,7 @@ class Index extends Controller
         $model = new LogModel();
         $db = 'system_log';
 
-        return $this->render('statistics', [
+        return $this->render('statisticsBak', [
             'data' => $ret['data'],
             'lenData' => $ret['lenData'],
             'x' => $ret['x'],
@@ -710,7 +710,7 @@ class Index extends Controller
         }
         $model = new LogModel();
 
-        return $this->render('statisticsBak', [
+        return $this->render('statistics', [
             'data' => $data,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
