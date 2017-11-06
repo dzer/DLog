@@ -19,6 +19,8 @@ class Index extends Controller
 
     const YEAR_MONTH_COUNT = 12;
 
+    const SYSTEM_LOG = 'system_log';
+
     static $filter = array('type','_id');
     
     public function beforeAction()
@@ -482,7 +484,7 @@ class Index extends Controller
         ]);
     }
 
-    public function statistics()
+    public function statisticsBak()
     {
         $time_y = Mll::app()->request->get('time-year', '');
         $time_m = Mll::app()->request->get('time-month', '');
@@ -673,5 +675,49 @@ class Index extends Controller
     static function tpl($len = 24, $start = 0, $val = 0)
     {
         return array_fill($start, $len, $val);
+    }
+
+    public function statistics(){
+        $time_y = Mll::app()->request->get('time-year', date('Y'));
+        $project = Mll::app()->request->get('project', '');
+        $log_type = Mll::app()->request->get('log_type', '');
+
+        $where = $ret = [];
+        if (!empty($project) && 'all' != $project) {
+            $where['project'] = $project;
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        }
+        $logCountModel = new LogCountHourModel();
+        $s = '^' . $time_y;
+        $where['date'] = new \MongoDB\BSON\Regex($s);
+        $result = $logCountModel->statistics([
+            'w' => $where,
+            'g' => [
+                'type' => '$type',
+                'date' => '$date',
+                'hour' => '$hour',
+            ],
+            's' => ['date'=>1,'_id.hour' => 1]
+        ]);
+
+        $data = [];
+        foreach($result as $key=>$val){
+            $data[$val['type']]['time'][] = $val['date'].' '.$val['_id']['hour'].':00';
+            $data[$val['type']]['count'][] = $val['count'];
+            $data[$val['type']]['error'][] = $val['error'];
+        }
+        $model = new LogModel();
+
+        return $this->render('statisticsBak', [
+            'data' => $data,
+            'base_url' => '/' . Mll::app()->request->getModule()
+                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
+            'types' => array_merge($model->types, ['USER' => '用户请求']),
+            'projects' => $model->getProjects(self::SYSTEM_LOG),
+            'servers' => $model->servers,
+            '_g' => $_GET
+        ]);
     }
 }

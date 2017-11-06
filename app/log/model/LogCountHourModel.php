@@ -303,6 +303,7 @@ class LogCountHourModel extends Model
                         '_id' => $args['g'],
                         'count' => ['$sum' => '$count'],
                         'type' => ['$first'=>'$type'],
+                        'date' => ['$first'=>'$date'],
 //                        'hour' => ['$first'=>'$hour'],
                         'execTime' => ['$sum' => '$execTime'],
                         'info' => ['$sum' => '$level_info'],

@@ -4,7 +4,11 @@ use app\common\helpers\Common;
 include(__DIR__ . '/../common/header.php')
 ?>
 <?php include(__DIR__ . '/../common/nav.php') ?>
-
+<style>
+    body,input{
+    /*background : rgb(51, 51, 51)*/
+    }
+</style>
 
 <link href="http://www.bootcss.com/p/bootstrap-datetimepicker/bootstrap-datetimepicker/css/datetimepicker.css" rel="stylesheet">
 <div class="container-fluid theme-showcase" role="main">
@@ -20,55 +24,49 @@ include(__DIR__ . '/../common/header.php')
 
                 <div class="form-group" style="margin-left: 10px">
                     年:
-                    <input class="time-input form-control" id="time-input-year" size="4" type="text" name="time-year" value="<?= $_g['time-year']?>" >
+                    <input class="time-input form-control" id="time-input-year" size="4" type="text" name="time-year" value="" >
                     <span class="add-on"><i class="icon-th"></i></span>
-                    月:
-                    <input class="time-input form-control" id="time-input-month" size="2" type="text" name="time-month" value="<?= $_g['time-month']?>" >
-                    <span class="add-on"><i class="icon-th"></i></span>
-                    日:
-                    <input class="time-input form-control" id="time-input-day" size="2" type="text" name="time-day" value="<?= $_g['time-day']?>" >
-                    <span class="add-on"><i class="icon-th"></i></span>
-
-                    <a href="#" id="tip" class="btn btn-large btn-success" title="TIPS" data-placement="bottom"  data-toggle="popover" title="" data-content="选择年:横轴为月;选择年月：横轴为天;选择年月日:横轴为小时(默认为小时)" data-original-title="A Title">时间搜索提示</a>
-
+<!--                    月:-->
+<!--                    <input class="time-input form-control" id="time-input-month" size="2" type="text" name="time-month" value="" >-->
+<!--                    <span class="add-on"><i class="icon-th"></i></span>-->
+<!--                    日:-->
+<!--                    <input class="time-input form-control" id="time-input-day" size="2" type="text" name="time-day" value="" >-->
+<!--                    <span class="add-on"><i class="icon-th"></i></span>-->
                 </div>
                 <!-- <div class="form-group" style="margin-left: 10px">
                     <label>时间：</label>
                     <input type="text" name="curr_time" class="form-control" placeholder="时间"
                            onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?/*= isset($_GET['curr_time']) ? $_GET['curr_time'] : ''*/?>">
                 </div>-->
-                <div class="form-group" style="margin-left: 10px">
-                    <label>日志类型：</label>
-                    <select name="log_type" class="form-control">
-                        <option value="">请选择</option>
-                        <?= Common::optionHtml($types, 'log_type');?>
-                    </select>
-                </div>
+<!--                <div class="form-group" style="margin-left: 10px">-->
+<!--                    <label>日志类型：</label>-->
+<!--                    <select name="log_type" class="form-control">-->
+<!--                        <option value="">请选择</option>-->
+<!--                        --><?//= Common::optionHtml($types, 'log_type');?>
+<!--                    </select>-->
+<!--                </div>-->
 
 
-                <button id="search" type="submit" class="btn btn-success" style="margin-left: 10px">搜索</button>
+                <button type="submit" class="btn btn-success" style="margin-left: 10px">搜索</button>
                 <a type="submit" href="<?= $base_url ?>" class="btn btn-danger" style="margin-left: 10px">重置</a>
             </form>
         </div>
-        <br />
-        <br />
+        <div style="height:20px"></div>
         <br />
         <div class="col-md-12">
 
-
-
-
             <div class="row">
-                <div id="count" style="width: 100%;height:200px;"></div>
+                <div id="request" style="width: 100%;height:400%"></div>
+                <br />
+                <div id="curl" style="width: 100%;height:400%"></div>
+                <br />
+                <div id="rule" style="width: 100%;height:400%"></div>
                 <div id="exec-time" style="width: 100%;height:200px;"></div>
                 <div id="error" style="width: 100%;height:200px;"></div>
                 <div id="warning" style="width: 100%;height:200px;"></div>
                 <div id="notice" style="width: 100%;height:200px;"></div>
-                <div id="httpCode_500" style="width: 100%;height:200px;"></div>
                 <div id="httpCode_400" style="width: 100%;height:200px;"></div>
-                <div id="execTime_5000" style="width: 100%;height:200px;"></div>
-                <div id="execTime_1000" style="width: 100%;height:200px;"></div>
-                <div id="execTime_500" style="width: 100%;height:200px;"></div>
+                <div id="httpCode_500" style="width: 100%;height:200px;"></div>
             </div>
 
         </div>
@@ -79,18 +77,12 @@ include(__DIR__ . '/../common/header.php')
 </div> <!-- /container -->
 
 <script src="http://www.bootcss.com/p/bootstrap-datetimepicker/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
-<link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
-<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
 <script type="text/javascript">
-    $('#tip').popover({
-        trigger : 'hover'
-    });
 
     $("#time-input-year").datetimepicker({
         todayBtn:  1,
         autoclose: 1,
-        language: 'zh-CN',
+        language:  'zh-CN',
         format: "yyyy",
         startView: 4, //这里就设置了默认视图为年视图
         minView: 4 //设置最小视图为年视图
@@ -99,7 +91,7 @@ include(__DIR__ . '/../common/header.php')
     $("#time-input-month").datetimepicker({
         todayBtn:  1,
         autoclose: 1,
-        language: 'zh-CN',
+        language:  'zh-CN',
         format: "mm",
         startView: 3, //这里就设置了默认视图为年视图
         minView: 3 //设置最小视图为年视图
@@ -116,539 +108,336 @@ include(__DIR__ . '/../common/header.php')
 
 </script>
 
-<script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
+<script src="http://echarts.baidu.com/dist/echarts.min.js"></script>
+<script src="http://echarts.baidu.com/asset/theme/dark.js"></script>
+<script src="http://echarts.baidu.com/asset/theme/macarons.js"></script>
+<script src="http://echarts.baidu.com/asset/theme/vintage.js"></script>
 
 <script>
-    // 路径配置
-    require.config({
-        paths: {
-            echarts: 'http://echarts.baidu.com/build/dist'
-        }
+
+    var timeData = <?=json_encode($data['REQUEST']['time'])?>;
+    timeData = timeData.map(function (str) {
+        return str.replace('2017-', '');
     });
 
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
+    option = {
+        title: {
+            text: 'REQUEST',
+            subtext: '',
+            x: 'center',
+            color: 'red'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function (params) {
+                return params[0].name + '<br/>'
+                    + params[0].seriesName + ' : ' + params[0].value + ' <br/>';
+            },
+            axisPointer: {
+                animation: false
+            }
+        },
+        legend: {
+            data:['请求量','错误'],
+            x: 'left'
+        },
+        dataZoom: [
+            {
+                show: true,
+                realtime: true,
+                start: 30,
+                end: 70,
+                xAxisIndex: [0, 1]
+            },
+            {
+                type: 'inside',
+                realtime: true,
+                start: 30,
+                end: 70,
+                xAxisIndex: [0, 1]
+            }
         ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('count'));
-            var   option = {
-                title: {
-                    text: '请求量',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#5cb85c'
-                    }
+        grid: [{
+            left: 50,
+            right: 50,
+            height: '35%'
+        }, {
+            left: 50,
+            right: 50,
+            top: '57%',
+            height: '35%'
+        }],
+        xAxis : [
+            {
+                type : 'category',
+                boundaryGap : false,
+                axisLine: {
+                    onZero: true
                 },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['count']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['count']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
+                data: timeData
+            },
+            {
+                gridIndex: 1,
+                type : 'category',
+                boundaryGap : false,
+                axisLine: {onZero: true},
+                data: timeData,
+                position: 'top'
+            }
+        ],
+        yAxis : [
+            {
+                name : '请求量',
+                type : 'value'
+                //max : 5000
+            },
+            {
+                gridIndex: 1,
+                name : '错误',
+                type : 'value',
+                inverse: true
+            }
+        ],
+        series : [
+            {
+                name:'请求量',
+                type:'line',
+                symbolSize: 8,
+                hoverAnimation: false,
+                data:   <?=json_encode($data['REQUEST']['count'])?>
 
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('exec-time'));
-            var   option = {
-                title: {
-                    text: '平均执行时间',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#5cb85c'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['execTime']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['execTime']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
+            },
+            {
+                name:'错误',
+                type:'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                symbolSize: 8,
+                hoverAnimation: false,
+                data: <?=json_encode($data['REQUEST']['error'])?>
 
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('error'));
-            var   option = {
-                title: {
-                    text: 'ERROR',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#DC143C'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['error']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['error']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('warning'));
-            var   option = {
-                title: {
-                    text: 'WARNING',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#FF6633'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['warning']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['warning']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('notice'));
-            var   option = {
-                title: {
-                    text: 'NOTICE',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#FF6633'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['notice']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['notice']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    //httpCode_500
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('httpCode_500'));
-            var   option = {
-                title: {
-                    text: 'HTTP_500',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#DC143C'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['httpCode_500']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['httpCode_500']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    //httpCode_400
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('httpCode_400'));
-            var   option = {
-                title: {
-                    text: 'HTTP_400',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#DC143C'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['httpCode_400']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['httpCode_400']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    //execTime_500
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('execTime_500'));
-            var   option = {
-                title: {
-                    text: 'EXECTIME_500',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#FF6633'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['execTime_500']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['execTime_500']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    //execTime_1000
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('execTime_1000'));
-            var   option = {
-                title: {
-                    text: 'EXECTIME_1000',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#DC143C'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['execTime_1000']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['execTime_1000']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
-    //execTime_5000
-    require(
-        [
-            'echarts',
-            'echarts/chart/line',   // 按需加载所需图表，如需动态类型切换功能，别忘了同时加载相应图表
-            'echarts/chart/bar'
-        ],
-        function (ec) {
-            var myChart = ec.init(document.getElementById('execTime_5000'));
-            var   option = {
-                title: {
-                    text: 'EXECTIME_5000',
-                    textStyle : {
-                        fontSize: 16,
-                        fontWeight: 'bolder',
-                        color: '#DC143C'
-                    }
-                },
-                tooltip : {
-                    trigger: 'axis'
-                },
-                legend: {
-                    data:<?= json_encode($lenData['execTime_5000']); ?>
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {show: true, type: ['line', 'bar', 'stack', 'tiled']},
-                        restore : {show: true},
-                        saveAsImage : {show: true}
-                    }
-                },
-                calculable : true,
-                xAxis : [
-                    {
-                        type : 'category',
-                        boundaryGap : false,
-                        data : <?= json_encode($x); ?>
-                    }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : <?= json_encode($data['execTime_5000']); ?>
-            };
-            myChart.setOption(option);
-        }
-    );
+            }
+        ]
+    };
+    var myChart = echarts.init(document.getElementById('request'),'macarons');
+    myChart.setOption(option);
 
-    $("body").keydown(function() {
-        if (event.keyCode == "13") {//keyCode=13是回车键
-            $('#search').click();
-        }
+
+    //curl
+
+    var timeData = <?=json_encode($data['CURL']['time'])?>;
+    timeData = timeData.map(function (str) {
+        return str.replace('2017-', '');
     });
 
+    option = {
+        title: {
+            text: 'CURL',
+            subtext: '',
+            x: 'center',
+            color: 'red'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function (params) {
+                return params[0].name + '<br/>'
+                    + params[0].seriesName + ' : ' + params[0].value + ' <br/>';
+            },
+            axisPointer: {
+                animation: false
+            }
+        },
+        legend: {
+            data:['请求量','错误'],
+            x: 'left'
+        },
+        dataZoom: [
+            {
+                show: true,
+                realtime: true,
+                start: 30,
+                end: 70,
+                xAxisIndex: [0, 1]
+            },
+            {
+                type: 'inside',
+                realtime: true,
+                start: 30,
+                end: 70,
+                xAxisIndex: [0, 1]
+            }
+        ],
+        grid: [{
+            left: 50,
+            right: 50,
+            height: '35%'
+        }, {
+            left: 50,
+            right: 50,
+            top: '57%',
+            height: '35%'
+        }],
+        xAxis : [
+            {
+                type : 'category',
+                boundaryGap : false,
+                axisLine: {
+                    onZero: true
+                },
+                data: timeData
+            },
+            {
+                gridIndex: 1,
+                type : 'category',
+                boundaryGap : false,
+                axisLine: {onZero: true},
+                data: timeData,
+                position: 'top'
+            }
+        ],
+        yAxis : [
+            {
+                name : '请求量',
+                type : 'value'
+                //max : 5000
+            },
+            {
+                gridIndex: 1,
+                name : '错误',
+                type : 'value',
+                inverse: true
+            }
+        ],
+        series : [
+            {
+                name:'请求量',
+                type:'line',
+                symbolSize: 8,
+                hoverAnimation: false,
+                data:   <?=json_encode($data['CURL']['count'])?>
+
+            },
+            {
+                name:'错误',
+                type:'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                symbolSize: 8,
+                hoverAnimation: false,
+                data: <?=json_encode($data['CURL']['error'])?>
+
+            }
+        ]
+    };
+    myChart = echarts.init(document.getElementById('curl'),'macarons');
+    myChart.setOption(option);
+
+    //rule
+    var timeData = <?=json_encode($data['RULE']['time'])?>;
+    timeData = timeData.map(function (str) {
+        return str.replace('2017-', '');
+    });
+
+    option = {
+        title: {
+            text: 'RULE',
+            subtext: '',
+            x: 'center',
+            color: 'red'
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function (params) {
+                return params[0].name + '<br/>'
+                    + params[0].seriesName + ' : ' + params[0].value + ' <br/>';
+            },
+            axisPointer: {
+                animation: false
+            }
+        },
+        legend: {
+            data:['请求量','错误'],
+            x: 'left'
+        },
+        dataZoom: [
+            {
+                show: true,
+                realtime: true,
+                start: 30,
+                end: 70,
+                xAxisIndex: [0, 1]
+            },
+            {
+                type: 'inside',
+                realtime: true,
+                start: 30,
+                end: 70,
+                xAxisIndex: [0, 1]
+            }
+        ],
+        grid: [{
+            left: 50,
+            right: 50,
+            height: '35%'
+        }, {
+            left: 50,
+            right: 50,
+            top: '57%',
+            height: '35%'
+        }],
+        xAxis : [
+            {
+                type : 'category',
+                boundaryGap : false,
+                axisLine: {
+                    onZero: true
+                },
+                data: timeData
+            },
+            {
+                gridIndex: 1,
+                type : 'category',
+                boundaryGap : false,
+                axisLine: {onZero: true},
+                data: timeData,
+                position: 'top'
+            }
+        ],
+        yAxis : [
+            {
+                name : '请求量',
+                type : 'value'
+                //max : 5000
+            },
+            {
+                gridIndex: 1,
+                name : '错误',
+                type : 'value',
+                inverse: true
+            }
+        ],
+        series : [
+            {
+                name:'请求量',
+                type:'line',
+                symbolSize: 8,
+                hoverAnimation: false,
+                data:   <?=json_encode($data['RULE']['count'])?>
+
+            },
+            {
+                name:'错误',
+                type:'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                symbolSize: 8,
+                hoverAnimation: false,
+                data: <?=json_encode($data['RULE']['error'])?>
+
+            }
+        ]
+    };
+    myChart = echarts.init(document.getElementById('rule'),'macarons');
+    myChart.setOption(option);
 </script>
 <?php include(__DIR__ . '/../common/footer.php') ?>
