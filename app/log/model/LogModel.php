@@ -47,7 +47,7 @@ class LogModel extends Model
         'web_php_16' => 'web_php_16',
     ];
 
-    public function getProjects($db, $expire = 86400)
+    public function getProjects($db = 'system_log', $expire = 86400)
     {
         $countArr = [
             'aggregate' => 'log_count_hour',
