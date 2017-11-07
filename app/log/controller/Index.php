@@ -90,7 +90,7 @@ class Index extends Controller
             'count_error' => isset($count_error_rs[0]['result']) ? $count_error_rs[0]['result'] : [],
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
-            'projects' => $model->getProjects('system_log'),
+            'projects' => $model->getProjects(),
             'types' => array_merge($model->types, ['USER' => 'PC请求']),
             'servers' => $model->servers,
         ]);
@@ -201,7 +201,7 @@ class Index extends Controller
                 //'page_count' => $page_count,
                 //'count' => $count
             ],
-            'projects' => $model->getProjects($db),
+            'projects' => $model->getProjects(),
             'types' => $model->types,
             'servers' => $model->servers,
             'base_url' => '/' . Mll::app()->request->getModule()
@@ -311,7 +311,7 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
-            'projects' => $model->getProjects($db),
+            'projects' => $model->getProjects(),
             'types' => $model->types,
             'servers' => $model->servers,
             'base_url' => '/' . Mll::app()->request->getModule()
@@ -435,7 +435,7 @@ class Index extends Controller
                 'page_count' => $page_count,
                 'count' => $count
             ],
-            'projects' => $model->getProjects($db),
+            'projects' => $model->getProjects(),
             'types' => $model->types,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
@@ -479,7 +479,7 @@ class Index extends Controller
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
-            'projects' => $model->getProjects($db),
+            'projects' => $model->getProjects(),
             'servers' => $model->servers,
         ]);
     }
@@ -558,7 +558,7 @@ class Index extends Controller
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
-            'projects' => $model->getProjects($db),
+            'projects' => $model->getProjects(),
             'servers' => $model->servers,
             '_g' => $_GET
         ]);

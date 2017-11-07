@@ -3,6 +3,7 @@
 namespace app\log\controller;
 
 use app\log\service\LogService;
+use Mll\Cache;
 use Mll\Controller;
 use Mll\Db\Mongo;
 use Mll\Mll;
@@ -22,6 +23,19 @@ class Parse extends Controller
         //获取缓存中日志数据并存储
         for ($i = intval($num / 20000); $i > 0; $i--) {
             echo LogService::pullLogByMq(20000) . '<br>';
+        }
+    }
+
+    public function deleteCache()
+    {
+        $cacheKey = Mll::app()->request->get('key');
+        if ($cacheKey) {
+            Cache::cut('file');
+            if (Cache::rm($cacheKey)) {
+                echo 'success';
+            } else {
+                echo 'fail';
+            }
         }
     }
 }
