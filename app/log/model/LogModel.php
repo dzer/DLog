@@ -76,11 +76,9 @@ class LogModel extends Model
         Cache::cut('file');
         $project_rs = Cache::get($cache_key);
         if ($project_rs === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = $db;
-            $mongo = new Mongo($mongoConfig);
+            $mongo = new Mongo();
             $projects = ['all' => '所有项目'];
-            $project_rs = $mongo->executeCommand($countArr);
+            $project_rs = $mongo->setDBName($db)->executeCommand($countArr);
             $project_rs = Common::objectToArray($project_rs);
             if (isset($project_rs[0]['result'])) {
                 foreach ($project_rs[0]['result'] as $_project) {
