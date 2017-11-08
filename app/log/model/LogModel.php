@@ -422,10 +422,132 @@ class LogModel extends Model
                 ['$limit' => $page_size]
             ],
         ];
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        $collection = $mongo->selectCollection('log');
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
+        return $collection->executeCommand($comArr);
+    }
+
+
+    function countRank2($db, array $where, $page, $page_size, $sort = 'time')
+    {
+        $comArr = [
+            'aggregate' => 'log',
+            'pipeline' => [
+                [
+                    '$project' => [
+                        'item' => 1,
+                        'url' => '$content.url',
+                        'type' => 1,
+                        'time' => 1,
+                        'client' => 1,
+                        'project' => 1,
+                        'level' => 1,
+                        'execTime' => '$content.execTime',
+                        'execTime_200' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gt' => ['$content.execTime', 0]], ['$lte' => ['$content.execTime', 0.2]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'execTime_500' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gt' => ['$content.execTime', 0.2]], ['$lte' => ['$content.execTime', 0.5]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'execTime_1000' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gt' => ['$content.execTime', 0.5]], ['$lte' => ['$content.execTime', 1]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'execTime_1000+' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gt' => ['$content.execTime', 1]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'httpCode_200' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gte' => ['$content.responseCode', 200]], ['$lte' => ['$content.responseCode', 220]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'httpCode_300' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gte' => ['$content.responseCode', 300]], ['$lte' => ['$content.responseCode', 320]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'httpCode_400' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gte' => ['$content.responseCode', 400]], ['$lte' => ['$content.responseCode', 420]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'httpCode_500' => [
+                            '$cond' => [
+                                'if' => ['$and' => [
+                                    ['$gte' => ['$content.responseCode', 500]], ['$lte' => ['$content.responseCode', 520]]
+                                ]],
+                                'then' => 1,
+                                'else' => 0
+                            ]
+                        ],
+                        'responseCode' => '$content.responseCode',
+                    ]
+                ],
+                ['$match' => $where],
+                [
+                    '$group' => [
+                        '_id' => [
+                            'url' => '$client',
+                        ],
+                        'count' => ['$sum' => 1],
+                        'type' => ['$first' => '$type'],
+                        'time' => ['$avg' => '$execTime'],
+                        'time_200' => ['$sum' => '$execTime_200'],
+                        'time_500' => ['$sum' => '$execTime_500'],
+                        'time_1000' => ['$sum' => '$execTime_1000'],
+                        'time_1000+' => ['$sum' => '$execTime_1000+'],
+                        'code_200' => ['$sum' => '$httpCode_200'],
+                        'code_300' => ['$sum' => '$httpCode_300'],
+                        'code_400' => ['$sum' => '$httpCode_400'],
+                        'code_500' => ['$sum' => '$httpCode_500'],
+                        'http_code' => ['$addToSet' => '$responseCode'],
+                        'min_time' => ['$min' => '$execTime'],
+                        'max_time' => ['$max' => '$execTime'],
+                    ]
+                ],
+                ['$sort' => [$sort => -1]],
+                ['$skip' => ($page - 1) * $page_size],
+                ['$limit' => $page_size]
+            ],
+        ];
+
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
         return $collection->executeCommand($comArr);
     }
 
@@ -468,10 +590,8 @@ class LogModel extends Model
         $cache_key = 'log_count_error_rs_' . $where['project'] . '_' . $curr_time;
         $count_rs = Cache::get($cache_key);
         if ($count_rs === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = $db;
-            $mongo = new Mongo($mongoConfig);
-            $collection = $mongo->selectCollection('log');
+            $mongo = new Mongo();
+            $collection = $mongo->setDBName($db)->selectCollection('log');
             $count_rs = $collection->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
             Cache::set($cache_key, json_encode($count_rs), $expire);
@@ -523,10 +643,8 @@ class LogModel extends Model
             ]
         ];
 
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        return Common::objectToArray($mongo->executeCommand($countArr));
+        $mongo = new Mongo();
+        return Common::objectToArray($mongo->setDBName($db)->executeCommand($countArr));
     }
 
     public function countNum($db, $where)
@@ -556,10 +674,8 @@ class LogModel extends Model
             ]
         ];
 
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        $count_rs = $mongo->executeCommand($countArr);
+        $mongo = new Mongo();
+        $count_rs = $mongo->setDBName($db)->executeCommand($countArr);
 
         $count_rs = Common::objectToArray($count_rs);
         return isset($count_rs[0]['result'][0]['count']) ? $count_rs[0]['result'][0]['count'] : null;
@@ -595,9 +711,7 @@ class LogModel extends Model
                 ],
             ]
         ];
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        return Common::objectToArray($mongo->executeCommand($countArr));
+        $mongo = new Mongo();
+        return Common::objectToArray($mongo->setDBName($db)->executeCommand($countArr));
     }
 }

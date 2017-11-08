@@ -2,7 +2,6 @@
 
 namespace app\log\model;
 
-use Mll\Mll;
 use Mll\Model;
 use Mll\Cache;
 use Mll\Db\Mongo;
@@ -40,10 +39,8 @@ class LogCountHourModel extends Model
                 ],
             ]
         ];
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        $rs = Common::objectToArray($mongo->executeCommand($statusArr));
+        $mongo = new Mongo();
+        $rs = Common::objectToArray($mongo->setDBName($db)->executeCommand($statusArr));
         return isset($rs[0]['result'][0]['count']) ? $rs[0]['result'][0]['count'] : 0;
     }
 
@@ -55,7 +52,7 @@ class LogCountHourModel extends Model
      * @param string $curr_time
      * @return array|mixed|object
      */
-    public function countStatus(array $where, $expire = 1800, $curr_time)
+    public function countStatus(array $where, $expire = 600, $curr_time)
     {
         $statusArr = [
             'aggregate' => 'log_count_hour',
@@ -88,10 +85,8 @@ class LogCountHourModel extends Model
         $cache_key = 'log2_status_rs_' . $project . '_' . $curr_time . '_' . $type;
         $status_rs = Cache::get($cache_key);
         if ($status_rs === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log';
-            $mongo = new Mongo($mongoConfig);
-            $status_rs = $mongo->executeCommand($statusArr);
+            $mongo = new Mongo();
+            $status_rs = $mongo->setDBName('system_log')->executeCommand($statusArr);
             $status_rs = Common::objectToArray($status_rs);
             Cache::set($cache_key, json_encode($status_rs), $expire);
         } else {
@@ -108,7 +103,7 @@ class LogCountHourModel extends Model
      * @param string $curr_time
      * @return array|mixed|object
      */
-    public function countByHour(array $where, $expire = 1800, $curr_time)
+    public function countByHour(array $where, $expire = 600, $curr_time)
     {
         $countArr = [
             'aggregate' => 'log_count_hour',
@@ -134,10 +129,8 @@ class LogCountHourModel extends Model
         $cache_key = 'log2_count_rs_' . $project . '_' . $curr_time . '_' . $type;
         $countData = Cache::get($cache_key);
         if ($countData === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log';
-            $mongo = new Mongo($mongoConfig);
-            $count_rs = $mongo->executeCommand($countArr);
+            $mongo = new Mongo();
+            $count_rs = $mongo->setDBName('system_log')->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
             if (!empty($count_rs[0]['result'])) {
                 foreach ($count_rs[0]['result'] as $_count) {
@@ -204,10 +197,8 @@ class LogCountHourModel extends Model
         $cache_key = 'log2_count_error_rs_' . $project . '_' . $curr_time;
         $count_rs = Cache::get($cache_key);
         if ($count_rs === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log';
-            $mongo = new Mongo($mongoConfig);
-            $count_rs = $mongo->executeCommand($countArr);
+            $mongo = new Mongo();
+            $count_rs = $mongo->setDBName('system_log')->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
             Cache::set($cache_key, json_encode($count_rs), $expire);
         } else {
@@ -255,11 +246,9 @@ class LogCountHourModel extends Model
         $project = isset($where['project']) ? $where['project'] : '';
         $cache_key = 'log2_count_type_rs_' . $project . '_' . $curr_time;
         $count_rs = Cache::get($cache_key);
-        if (1||$count_rs === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            $mongoConfig['database'] = 'system_log';
-            $mongo = new Mongo($mongoConfig);
-            $count_rs = $mongo->executeCommand($countArr);
+        if ($count_rs === false) {
+            $mongo = new Mongo();
+            $count_rs = $mongo->setDBName('system_log')->executeCommand($countArr);
             $count_rs = Common::objectToArray($count_rs);
             Cache::set($cache_key, json_encode($count_rs), $expire);
         } else {
@@ -340,9 +329,8 @@ class LogCountHourModel extends Model
         if(self::$mongo){
             return self::$mongo;
         }
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = 'system_log';
-        self::$mongo = new Mongo($mongoConfig);
+        self::$mongo = new Mongo();
+        self::$mongo->setDBName('system_log');
         return self::$mongo;
     }
 

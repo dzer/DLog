@@ -60,7 +60,7 @@ class UserFormService
             unset($data['role']);
         }
         $mongo = new Mongo();
-        if ($type == 'insert' && $mongo->selectCollection('user')->count(['email' => $data['email']]) > 0) {
+        if ($type == 'insert' && $mongo->setDBName('system_log')->selectCollection('user')->count(['email' => $data['email']]) > 0) {
             $this->errorMsg = '邮箱已存在';
             return false;
         }

@@ -180,11 +180,9 @@ class Index extends Controller
                 $where['content.responseCode']['$eq'] = intval($responseCode);
             }
         }
-        $mongoConfig = Mll::app()->config->get('db.mongo');
         $db = 'system_log_' . date('m_d', strtotime($start_time));
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        $collection = $mongo->selectCollection('log');
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
         $model = new LogModel();
         //echo json_encode($where);
         //$count = $mongo->count($where);
@@ -290,11 +288,9 @@ class Index extends Controller
             }
         }
 
-        $mongoConfig = Mll::app()->config->get('db.mongo');
         $db = 'system_log_' . date('m_d', strtotime($start_time));
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        $collection = $mongo->selectCollection('log');
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
         $model = new LogModel();
         //echo json_encode($where);
         $count = $mongo->count($where);
@@ -327,11 +323,9 @@ class Index extends Controller
         $requestId = Mll::app()->request->get('request_id');
         $time = Mll::app()->request->get('time', date('Y-m-d'));
 
-        $mongoConfig = Mll::app()->config->get('db.mongo');
         $db = 'system_log_' . date('m_d', strtotime($time));
-        $mongoConfig['database'] = $db;
-        $mongo = new Mongo($mongoConfig);
-        $collection = $mongo->selectCollection('log');
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
         $rs = $collection->find(['requestId' => $requestId]);
         $rs = Common::objectToArray($rs);
 
@@ -404,7 +398,7 @@ class Index extends Controller
             $where['time']['$lte'] = $end_time;
         }
         if (!empty($request_url)) {
-            $where['content.url']['$regex'] = preg_quote(trim($request_url));
+            $where['url']['$regex'] = preg_quote(trim($request_url));
         }
         if (empty($sort)) {
             $sort = 'count';
@@ -412,10 +406,9 @@ class Index extends Controller
 
         $where['content.execTime']['$gt'] = $execTime;
 
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = 'system_log_' . date('m_d', strtotime($start_time));
-        $mongo = new Mongo($mongoConfig);
-        $collection = $mongo->selectCollection('log');
+        $db = 'system_log_' . date('m_d', strtotime($start_time));
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
         $count = $collection->count($where);
         unset($where['content.execTime']);
 
@@ -428,6 +421,88 @@ class Index extends Controller
         $rs = Common::objectToArray($model->countRank($db, $where, $page, $page_size, $sort));
 
         return $this->render('rank', [
+            'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
+            'page' => [
+                'page' => $page,
+                'page_size' => $page_size,
+                'page_count' => $page_count,
+                'count' => $count
+            ],
+            'projects' => $model->getProjects(),
+            'types' => $model->types,
+            'base_url' => '/' . Mll::app()->request->getModule()
+                . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
+        ]);
+    }
+
+    /**
+     * 性能排行
+     */
+    public function rank2()
+    {
+        $start_time = Mll::app()->request->get('start_time', date('Y-m-d 00:00:00'));
+        $end_time = Mll::app()->request->get('end_time', date('Y-m-d') . ' 23:59:59');
+        $request_url = Mll::app()->request->get('request_url');
+        $log_type = Mll::app()->request->get('log_type', LOG_TYPE_FINISH);
+        $log_level = Mll::app()->request->get('log_level');
+        $page = Mll::app()->request->get('page/d', 1, 'intval');
+        $page_size = Mll::app()->request->get('limit/d', 20, 'intval');
+        $project = Mll::app()->request->get('project', 'help');
+        $execTime = Mll::app()->request->get('execTime/f', 5, 'floatval');
+        $sort = Mll::app()->request->get('sort', 'count');
+
+        $_GET['start_time'] = $start_time;
+        $_GET['end_time'] = $end_time;
+        $_GET['log_type'] = $log_type;
+        $_GET['log_level'] = $log_level;
+        $_GET['project'] = $project;
+        $_GET['execTime'] = $execTime;
+        $_GET['sort'] = $sort;
+        $_GET['request_url'] = $request_url;
+
+        $where = [];
+
+        if (!empty($project) && $project != 'all') {
+            $where['project'] = $project;
+        }
+        if (!empty($log_type)) {
+            $where['type'] = $log_type;
+        } else {
+            $where['type'] = LOG_TYPE_FINISH;
+        }
+        if (!empty($log_level)) {
+            $where['level'] = $log_level;
+        }
+        if (!empty($start_time)) {
+            $where['time']['$gte'] = $start_time;
+        }
+        if (!empty($end_time)) {
+            $where['time']['$lte'] = $end_time;
+        }
+        if (!empty($request_url)) {
+            $where['url']['$regex'] = preg_quote(trim($request_url));
+        }
+        if (empty($sort)) {
+            $sort = 'count';
+        }
+
+        $where['content.execTime']['$gt'] = $execTime;
+
+        $db = 'system_log_' . date('m_d', strtotime($start_time));
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log');
+        $count = $collection->count($where);
+        unset($where['content.execTime']);
+
+        $where['execTime']['$gt'] = $execTime;
+        //计算分页
+        $page_count = ceil($count / $page_size);
+
+        $model = new LogModel();
+        $db = 'system_log_' . date('m_d', strtotime($start_time));
+        $rs = Common::objectToArray($model->countRank2($db, $where, $page, $page_size, $sort));
+
+        return $this->render('rank2', [
             'rs' => isset($rs[0]['result']) ? $rs[0]['result'] : null,
             'page' => [
                 'page' => $page,

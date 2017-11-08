@@ -23,12 +23,12 @@ class UserModel extends Model
 
     public function insert($data) {
         $mongo = new Mongo();
-        return $mongo->selectCollection('user')->batchInsert([$data]);
+        return $mongo->setDBName('system_log')->selectCollection('user')->batchInsert([$data]);
     }
 
     public function delete($email) {
         $mongo = new Mongo();
-        return $mongo->selectCollection('user')->remove(['email' => $email]);
+        return $mongo->setDBName('system_log')->selectCollection('user')->remove(['email' => $email]);
     }
 
     public function update($email, $data) {
@@ -36,15 +36,13 @@ class UserModel extends Model
             return false;
         }
         $mongo = new Mongo();
-        return $mongo->selectCollection('user')->update(['email' => $email], ['$set' => $data]);
+        return $mongo->setDBName('system_log')->selectCollection('user')->update(['email' => $email], ['$set' => $data]);
     }
 
     public function checkLogin($username, $password)
     {
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = 'system_log';
-        $mongo = new Mongo($mongoConfig);
-        $rs = Common::objectToArray($mongo->selectCollection('user')->find(['email' => $username, 'status' => self::STATUS['active']]));
+        $mongo = new Mongo();
+        $rs = Common::objectToArray($mongo->setDBName('system_log')->selectCollection('user')->find(['email' => $username, 'status' => self::STATUS['active']]));
         if (!empty($rs[0])) {
             $userInfo = $rs[0];
             if ($this->validatePassword($password, $userInfo['password'])) {

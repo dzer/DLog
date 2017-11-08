@@ -153,9 +153,8 @@ class ForewarningCountService
         if (empty($config) || empty($config['enable']) || empty($config['where']['level']) || empty($config['where']['url'])) {
             return false;
         }
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = 'system_log_' . date('m_d');
-        $mongo = new Mongo($mongoConfig);
+        $db = 'system_log_' . date('m_d');
+        $mongo = new Mongo();
         $start_time = date('Y-m-d H:i:s', time() - ($config['time'] * 60));
         $end_time = date('Y-m-d H:i:s');
         $where = [
@@ -163,7 +162,7 @@ class ForewarningCountService
             'level' => $config['where']['level'],
             'content.url' => ['$regex' => preg_quote($config['where']['url'])],
         ];
-        $mongo->selectCollection('log');
+        $mongo->setDBName($db)->selectCollection('log');
         $rs = \Mll\Common\Common::objectToArray($mongo->find($where, [], 0, 10));
         if (isset($rs[0])) {
             $count = count($rs);

@@ -61,8 +61,7 @@ class LogService
         if ($mq === null) {
             $mq = new Amqp(Mll::app()->config->get('mq.rabbit'));
             //判断是否能正常链接
-            $mongoConfig['database'] = 'system_log_' . date('m_d');
-            new Mongo($mongoConfig);
+            new Mongo();
         }
         while ($num--) {
             $msg = $mq->getMessage('QUEUE_PHP_LOG');
@@ -77,9 +76,9 @@ class LogService
             $logArr = self::countLogByHour($logs);
             unset($logs);
             foreach ($logArr['log'] as $date => $_log) {
-                $mongoConfig['database'] = 'system_log_' . $date;
-                $mongo = new Mongo($mongoConfig);
-                $insertNum += $mongo->selectCollection('log')->batchInsert($_log);
+                $db = 'system_log_' . $date;
+                $mongo = new Mongo();
+                $insertNum += $mongo->setDBName($db)->selectCollection('log')->batchInsert($_log);
                 if ($insertNum == 0) {
                     Mll::app()->log->warning(
                         date('Y-m-d H:i:s') . 'mongo 插入失败' . count($_log) . '条！'
@@ -89,9 +88,9 @@ class LogService
 
             if (!empty($logArr['countHour'])) {
                 foreach ($logArr['countHour'] as $date => $_log) {
-                    $mongoConfig['database'] = 'system_log';
-                    $mongo = new Mongo($mongoConfig);
-                    $mongo->selectCollection('log_count_hour');
+                    $db = 'system_log';
+                    $mongo = new Mongo();
+                    $mongo->setDBName($db)->selectCollection('log_count_hour');
                     foreach ($_log as $k => $v) {
                         $where = explode('#', $k);
                         $updateNum += $mongo->update(
@@ -212,9 +211,7 @@ class LogService
         $cacheKey = 'check_curr_db_' . date('d');
         $is_checked = Cache::get($cacheKey);
         if ($is_checked === false) {
-            $mongoConfig = Mll::app()->config->get('db.mongo');
-            unset($mongoConfig['database']);
-            $mongo = new Mongo($mongoConfig);
+            $mongo = new Mongo();
             $mongo->setDBName('system_log_' . date('m_d'));
             $mongo->executeCommand([
                 'createIndexes' => 'log',

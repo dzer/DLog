@@ -61,10 +61,9 @@ class User extends Controller
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 40, 'intval');
 
-        $mongoConfig = Mll::app()->config->get('db.mongo');
-        $mongoConfig['database'] = 'system_log';
-        $mongo = new Mongo($mongoConfig);
-        $collection = $mongo->selectCollection('user');
+        $db = 'system_log';
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('user');
         $sort = 'createTime';
         $where = ['email' => ['$ne' => $_SESSION['userInfo']['email']]];
         $count = $mongo->count($where);
