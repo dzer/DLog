@@ -14,15 +14,13 @@
             <ul class="nav navbar-nav">
                 <?php
                 $action = \Mll\Mll::app()->request->getAction();
-                $control = \Mll\Mll::app()->request->getController();
 
                 ?>
-                <li class="<?= $action == 'index' ? 'active' : ''?>"><a href="/log/Index/index">仪表盘</a></li>
-                <li class="<?= $control== 'Index'&&$action == 'just' ? 'active' : ''?>"><a href="/log/Index/just">最近运行</a></li>
-                <li class="<?= $action == 'rank' ? 'active' : ''?>"><a href="/log/Index/rank">性能排行</a></li>
-                <li class="<?= $action == 'count' ? 'active' : ''?>"><a href="/log/Index/count">日志统计</a></li>
-                <li class="<?= $action == 'statistics' ? 'active' : ''?>"><a href="/log/Index/statistics">图表</a></li>
-                <li class="<?= $control== 'History'&&$action == 'just' ? 'active' : ''?>"><a href="/log/History/just">历史数据</a></li>
+<!--                <li class="--><?//= $action == 'index' ? 'active' : ''?><!--"><a href="/log/Index/index">仪表盘</a></li>-->
+                <li class="<?= $action == 'just' ? 'active' : ''?>"><a href="/log/History/just">历史数据</a></li>
+<!--                <li class="--><?//= $action == 'rank' ? 'active' : ''?><!--"><a href="/log/Index/rank">性能排行</a></li>-->
+<!--                <li class="--><?//= $action == 'count' ? 'active' : ''?><!--"><a href="/log/Index/count">日志统计</a></li>-->
+<!--                <li class="--><?//= $action == 'statistics' ? 'active' : ''?><!--"><a href="/log/Index/statistics">图表</a></li>-->
                 <!--<li><a href="#">异常统计</a></li>-->
             </ul>
             <ul class="nav navbar-nav navbar-right">

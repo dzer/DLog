@@ -24,7 +24,7 @@ include(__DIR__ . '/../common/header.php')
 
                 <div class="form-group" style="margin-left: 10px">
                     年:
-                    <input class="time-input form-control" id="time-input-year" size="4" type="text" name="time-year" value="" >
+                    <input class="time-input form-control" id="time-input-year" size="4" type="text" name="time-year" value="<?=$_g['time-year']?>" >
                     <span class="add-on"><i class="icon-th"></i></span>
 <!--                    月:-->
 <!--                    <input class="time-input form-control" id="time-input-month" size="2" type="text" name="time-month" value="" >-->
