@@ -69,7 +69,8 @@ class LogModel extends Model
                     ]
                 ],
                 ['$sort' => ['count' => -1]],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
 
         $cache_key = 'log_count_projects';
@@ -206,7 +207,8 @@ class LogModel extends Model
                         'code_500' => ['$sum' => '$httpCode_500'],
                     ]
                 ],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
         Cache::cut('file');
         $cache_key = 'log_status_rs_' . $where['project'] . '_' . $curr_time . '_' .$where['type'];
@@ -277,7 +279,8 @@ class LogModel extends Model
                     ]
                 ],
                 ['$sort' => ['date' => -1]],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
 
         $cache_key = 'log_count_rs_' . $where['project'] . '_' . $curr_time . '_' .$where['type'];
@@ -417,8 +420,9 @@ class LogModel extends Model
                 ],
                 ['$sort' => [$sort => -1]],
                 ['$skip' => ($page - 1) * $page_size],
-                ['$limit' => $page_size]
+                ['$limit' => $page_size],
             ],
+            'allowDiskUse' => true
         ];
         $mongo = new Mongo();
         $collection = $mongo->setDBName($db)->selectCollection('log');
@@ -542,6 +546,7 @@ class LogModel extends Model
                 ['$skip' => ($page - 1) * $page_size],
                 ['$limit' => $page_size]
             ],
+            'allowDiskUse' => true
         ];
 
         $mongo = new Mongo();
@@ -582,7 +587,8 @@ class LogModel extends Model
                     ]
                 ],
                 ['$sort' => ['count' => -1]],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
 
         $cache_key = 'log_count_error_rs_' . $where['project'] . '_' . $curr_time;
@@ -638,7 +644,8 @@ class LogModel extends Model
                         'time' => ['$avg' => '$execTime'],
                     ]
                 ],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
 
         $mongo = new Mongo();
@@ -669,7 +676,8 @@ class LogModel extends Model
                         'count' => ['$sum' => 1],
                     ]
                 ],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
 
         $mongo = new Mongo();
@@ -707,7 +715,8 @@ class LogModel extends Model
                         'count' => ['$sum' => 1],
                     ]
                 ],
-            ]
+            ],
+            'allowDiskUse' => true
         ];
         $mongo = new Mongo();
         return Common::objectToArray($mongo->setDBName($db)->executeCommand($countArr));

@@ -16,9 +16,9 @@
                     <div class="form-group">
                         <label>时间范围：</label>
                         <input type="text" name="start_time" class="form-control" placeholder="开始时间"
-                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['start_time']) ? $_GET['start_time'] : ''?>">
+                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['start_time']) ? $_GET['start_time'] : ''?>">
                         <input type="text" name="end_time" class="form-control" placeholder="结束时间"
-                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['end_time']) ? $_GET['end_time'] : ''?>">
+                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['end_time']) ? $_GET['end_time'] : ''?>">
                     </div>
                     <div class="form-group" style="margin-left: 10px">
                         <label>请求地址：</label>
@@ -147,7 +147,7 @@
                     </tbody>
                 </table>
                 <nav aria-label="Page navigation" class="pull-right">
-                    <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个调用次数</div>
+                    <div class="pagination" style="line-height: 34px; float: left; margin-right: 10px;">总计 <?= $page['count']?>个记录 分为 <?= $page['page_count']?>页 当前第 <?= $page['page']?>页</div>
                     <ul class="pagination">
                         <?php
                         if (!empty($page)) {
@@ -161,14 +161,22 @@
                                 </li>
                                 <?php
                             }
-                            $_GET['page'] = $page['page'] + 1;
-                            ?>
-                            <li>
-                                <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            <?php
+                            for ($i = max(1, $page['page'] - 5); $i <= min($page['page'] + 5, $page['page_count']); $i++) {
+                                $_GET['page'] = $i;
+                                ?>
+                                <li <?= $page['page'] == $i ? 'class="active"' : ''?>><a href="<?= $base_url . '?' . http_build_query($_GET);?>"><?= $i ?></a></li>
+                                <?php
+                            }
+                            if ($page['page'] < $page['page_count']) {
+                                $_GET['page'] = $page['page'] + 1;
+                                ?>
+                                <li>
+                                    <a href="<?= $base_url . '?' . http_build_query($_GET);?>" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <?php
+                            }
                         }
                         ?>
                     </ul>

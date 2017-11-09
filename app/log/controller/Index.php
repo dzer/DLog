@@ -402,7 +402,7 @@ class Index extends Controller
             $where['time']['$lte'] = $end_time;
         }
         if (!empty($request_url)) {
-            $where['url']['$regex'] = preg_quote(trim($request_url));
+            $where['content.url']['$regex'] = preg_quote(trim($request_url));
         }
         if (empty($sort)) {
             $sort = 'count';
@@ -414,6 +414,10 @@ class Index extends Controller
         $mongo = new Mongo();
         $collection = $mongo->setDBName($db)->selectCollection('log');
         $count = $collection->count($where);
+        if (!empty($request_url)) {
+            unset($where['content.url']);
+            $where['url']['$regex'] = preg_quote(trim($request_url));
+        }
         unset($where['content.execTime']);
 
         $where['execTime']['$gt'] = $execTime;
