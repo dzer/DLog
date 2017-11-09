@@ -21,7 +21,7 @@ class History extends Controller
     {
         parent::beforeAction();
         if (!isset($_SESSION['userInfo']['email'])) {
-            return $this->redirect('/log/User/login');
+            return $this->redirect('/log/User/login'. '?callback=' . Mll::app()->request->getUrl());
         }
         return true;
     }

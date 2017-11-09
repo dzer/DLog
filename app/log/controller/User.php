@@ -23,7 +23,7 @@ class User extends Controller
         parent::beforeAction();
         if (in_array(Mll::app()->request->getAction(), ['setting', 'member', 'add', 'update', 'delete'])) {
             if (!isset($_SESSION['userInfo']['email'])) {
-                return $this->redirect('/log/User/login');
+                return $this->redirect('/log/User/login'. '?callback=' . Mll::app()->request->getUrl());
             }
         }
         if (in_array(Mll::app()->request->getAction(), ['member', 'add', 'update', 'delete'])) {
@@ -40,11 +40,15 @@ class User extends Controller
         if (Mll::app()->request->getIsPost()) {
             $username = Mll::app()->request->post('user');
             $password = Mll::app()->request->post('password');
+            $callback = Mll::app()->request->get('callback');
             if (empty($username) || empty($password)) {
                 $errorMsg = '账号密码不能为空';
             } else {
                 $model = new UserModel();
                 if ($model->checkLogin($username, $password)) {
+                    if (!empty($callback)) {
+                        return $this->redirect($callback);
+                    }
                     return $this->redirect('/log/Index/index');
                 } else {
                     $errorMsg = '账号或密码不正确';
