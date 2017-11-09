@@ -123,7 +123,7 @@ class ForewarningCountService
         unset($model->servers['web_php_16']);
         $diff_servers = array_diff($model->servers, $servers);
 
-        if (!empty($diff_servers)) {
+        if (!empty($diff_servers) && !(date('H') == 0 && date('i') < 5)) {
             //判断mq是否链接成功
             $msgNum = 0;
             try {
