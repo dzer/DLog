@@ -27,7 +27,7 @@ class Index extends Controller
     {
         parent::beforeAction();
         if (!isset($_SESSION['userInfo']['email'])) {
-            return $this->redirect('/log/User/login'. '?callback=' . Mll::app()->request->getUrl());
+            return $this->redirect('/log/User/login'. '?callback=' . urlencode(Mll::app()->request->getUrl()));
         }
         return true;
     }
