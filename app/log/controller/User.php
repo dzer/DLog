@@ -113,7 +113,7 @@ class User extends Controller
         $email = Mll::app()->request->get('email');
         $errorMsg = '';
         $mongo = new Mongo();
-        $info = Common::objectToArray($mongo->selectCollection('user')->find(['email' => $email]));
+        $info = Common::objectToArray($mongo->setDBName('system_log')->selectCollection('user')->find(['email' => $email]));
         if (empty($info[0])) {
             throw new \Exception('用户不存在');
         }
@@ -136,7 +136,7 @@ class User extends Controller
         $email = isset($_SESSION['userInfo']['email']) ? $_SESSION['userInfo']['email'] : '';
         $errorMsg = $successMsg = '';
         $mongo = new Mongo();
-        $info = Common::objectToArray($mongo->selectCollection('user')->find(['email' => $email]));
+        $info = Common::objectToArray($mongo->setDBName('system_log')->selectCollection('user')->find(['email' => $email]));
         if (empty($info[0])) {
             throw new \Exception('用户不存在');
         }
@@ -172,6 +172,7 @@ class User extends Controller
 
     public function logout()
     {
+        session_start();
         @session_unset();
         $sessionId = session_id();
         @session_destroy();
