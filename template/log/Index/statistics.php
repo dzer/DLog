@@ -8,8 +8,14 @@ include(__DIR__ . '/../common/header.php')
     body,input{
     /*background : rgb(51, 51, 51)*/
     }
+    #calendar{
+        position:relative;
+        left:-27px;
+        top:7px;
+    }
 </style>
 
+<link rel="stylesheet" href="/static/log/css/daterangepicker.css" type="text/css" />
 <link href="http://www.bootcss.com/p/bootstrap-datetimepicker/bootstrap-datetimepicker/css/datetimepicker.css" rel="stylesheet">
 <div class="container-fluid theme-showcase" role="main">
     <div class="row">
@@ -23,12 +29,18 @@ include(__DIR__ . '/../common/header.php')
                 </div>
 
                 <div class="form-group" style="margin-left: 10px">
-                    年:
-                    <input class="time-input form-control" id="time-input-year" size="4" type="text" name="time-year" value="<?=$_g['time-year']?>" >
-                    <span class="add-on"><i class="icon-th"></i></span>
-<!--                    月:-->
-<!--                    <input class="time-input form-control" id="time-input-month" size="2" type="text" name="time-month" value="" >-->
-<!--                    <span class="add-on"><i class="icon-th"></i></span>-->
+                    时间维度:
+                    <select name="time-level" class="form-control">
+                        <option value="hour" <?= $_g['time-level']=='hour' ? 'selected' : ''; ?> >小时</option>
+                        <option value="day" <?= $_g['time-level']=='day' ? 'selected' : ''; ?> >天</option>
+                    </select>
+
+
+                    <input class="time-input form-control fc-clear" id="time-range" size="25" type="text" name="time_range" value="<?=$_g['time_range']?>" >
+
+                    <span id="calendar" class="glyphicon glyphicon-calendar form-group-btn input-icon input-icon-md"  style="font-size:21px;color: blue"></span>
+
+                    <span class="add-on"><i class="icon-th "></i></span>
 <!--                    日:-->
 <!--                    <input class="time-input form-control" id="time-input-day" size="2" type="text" name="time-day" value="" >-->
 <!--                    <span class="add-on"><i class="icon-th"></i></span>-->
@@ -77,34 +89,48 @@ include(__DIR__ . '/../common/header.php')
 </div> <!-- /container -->
 
 <script src="http://www.bootcss.com/p/bootstrap-datetimepicker/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script src="/static/log/js/moment.js"></script>
+<script src="/static/log/js/daterangepicker.js"></script>
 <script type="text/javascript">
 
-    $("#time-input-year").datetimepicker({
-        todayBtn:  1,
-        autoclose: 1,
-        language:  'zh-CN',
-        format: "yyyy",
-        startView: 4, //这里就设置了默认视图为年视图
-        minView: 4 //设置最小视图为年视图
+    $(function() {
+        $('#calendar').daterangepicker({
+            applyClass : 'btn-sm btn-success',
+            cancelClass : 'btn-sm btn-default',
+            locale: {
+                applyLabel: '确认',
+                cancelLabel: '取消',
+                fromLabel : '起始时间',
+                toLabel : '结束时间',
+                customRangeLabel : '自定义',
+                firstDay : 1
+            },
+            ranges : {
+                //'最近1小时': [moment().subtract('hours',1), moment()],
+                '今日': [moment().startOf('day'), moment()],
+                '昨日': [moment().subtract('days', 1).startOf('day'), moment().subtract('days', 1).endOf('day')],
+                '最近7日': [moment().subtract('days', 6), moment()],
+                '最近30日': [moment().subtract('days', 29), moment()],
+                '本月': [moment().startOf("month"),moment().endOf("month")],
+                '上个月': [moment().subtract(1,"month").startOf("month"),moment().subtract(1,"month").endOf("month")]
+            },
+            opens : 'right',    // 日期选择框的弹出位置
+            separator : ' 至 ',
+            showWeekNumbers : true,     // 是否显示第几周
+//            timePicker: true,
+//            timePickerIncrement : 60, // 时间的增量，单位为分钟
+//            timePicker12Hour : false, // 是否使用12小时制来显示时间
+            maxDate : moment(),           // 最大时间
+            format: 'YYYY-MM-DD HH:mm'
+
+        }, function(start, end, label) { // 格式化日期显示框
+            $('#time-range').val(start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'));
+        }).next().on('click', function(){
+                $(this).prev().focus();
+            });
     });
 
-    $("#time-input-month").datetimepicker({
-        todayBtn:  1,
-        autoclose: 1,
-        language:  'zh-CN',
-        format: "mm",
-        startView: 3, //这里就设置了默认视图为年视图
-        minView: 3 //设置最小视图为年视图
-    });
-    $("#time-input-day").datetimepicker({
-        todayBtn:  1,
-        autoclose: 1,
-        todayHighlight: 1,
-        language:  'zh-CN',
-        format: "dd",
-        startView: 2, //这里就设置了默认视图为年视图
-        minView: 2 //设置最小视图为年视图
-    });
+
 
 </script>
 

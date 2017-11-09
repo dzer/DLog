@@ -21,6 +21,10 @@ class Index extends Controller
 
     const SYSTEM_LOG = 'system_log';
 
+    const TIME_LEVEL_HOUR = 'hour';
+
+    const TIME_LEVEL_DAY = 'day';
+
     static $filter = array('type','_id');
     
     public function beforeAction()
@@ -756,7 +760,11 @@ class Index extends Controller
         $time_y = Mll::app()->request->get('time-year', date('Y'));
         $project = Mll::app()->request->get('project', '');
         $log_type = Mll::app()->request->get('log_type', '');
-
+        $timeLevel = Mll::app()->request->get('time-level', 'hour');
+        $time_range = Mll::app()->request->get('time_range', date('Y-m-d').' - '.date('Y-m-d'));
+        $timeArr = explode(' - ',$time_range);
+        $timeFrom = $timeArr[0];
+        $timeTo = $timeArr[1];
         $where = $ret = [];
         if (!empty($project) && 'all' != $project) {
             $where['project'] = $project;
@@ -764,22 +772,49 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
+        //where -> date
+        if($timeFrom == $timeTo){
+            $where['date'] = $timeFrom;
+        }else{
+            $where['date'] = [
+                '$gte' => $timeFrom,
+                '$lte' => $timeTo,
+            ];
+        }
+        //group
+        switch ( $timeLevel ) {
+            case  self::TIME_LEVEL_HOUR :
+                $group = [
+                    'type' => '$type',
+                    'date' => '$date',
+                    'hour' => '$hour',
+                ];
+                $sort = ['date'=>1,'_id.hour' => 1];  //sort
+                break;
+            case  self::TIME_LEVEL_DAY :
+                $group = [
+                    'type' => '$type',
+                    'date' => '$date',
+                    //'hour' => '$hour',
+                ];
+                $sort = ['date'=>1];
+                break;
+            default:;
+        }
+
+
         $logCountModel = new LogCountHourModel();
-        $s = '^' . $time_y;
-        $where['date'] = new \MongoDB\BSON\Regex($s);
+        //$s = '^' . $time_y;
+        //$where['date'] = new \MongoDB\BSON\Regex($s);
         $result = $logCountModel->statistics([
             'w' => $where,
-            'g' => [
-                'type' => '$type',
-                'date' => '$date',
-                'hour' => '$hour',
-            ],
-            's' => ['date'=>1,'_id.hour' => 1]
+            'g' => $group,
+            's' => $sort
         ]);
 
         $data = [];
         foreach($result as $key=>$val){
-            $data[$val['type']]['time'][] = $val['date'].' '.$val['_id']['hour'].':00';
+            $data[$val['type']]['time'][] = $val['date'].' '.$val['_id']['hour'].($timeLevel==self::TIME_LEVEL_DAY?'':':00');
             $data[$val['type']]['count'][] = $val['count'];
             $data[$val['type']]['error'][] = $val['error'];
         }
