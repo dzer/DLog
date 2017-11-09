@@ -16,9 +16,9 @@
                     <div class="form-group">
                         <label>时间范围：</label>
                         <input type="text" name="start_time" class="form-control" placeholder="开始时间"
-                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['start_time']) ? $_GET['start_time'] : ''?>">
+                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['start_time']) ? $_GET['start_time'] : ''?>">
                         <input type="text" name="end_time" class="form-control" placeholder="结束时间"
-                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['end_time']) ? $_GET['end_time'] : ''?>">
+                               onclick="laydate({ istime: true, format: 'YYYY-MM-DD hh:mm:ss'})" value="<?= isset($_GET['end_time']) ? $_GET['end_time'] : ''?>">
                     </div>
                     <div class="form-group" style="margin-left: 10px">
                         <label>请求地址：</label>
