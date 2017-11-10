@@ -818,16 +818,22 @@ class Index extends Controller
             's' => $sort
         ]);
 
-        $data = [];
+        $data = $single = [];
         foreach($result as $key=>$val){
-            $data[$val['type']]['time'][] = $val['date'].' '.$val['_id']['hour'].($timeLevel==self::TIME_LEVEL_DAY?'':':00');
-            $data[$val['type']]['count'][] = $val['count'];
-            $data[$val['type']]['error'][] = $val['error'];
+            $time = $val['date'].' '.$val['_id']['hour'].($timeLevel==self::TIME_LEVEL_DAY?'':':00');
+            //$data[$val['type']]['time'][] = $time;
+            //$data[$val['type']]['count'][] = $val['count'];
+            //$data[$val['type']]['error'][] = $val['error'];
+            $single[$val['type']]['exec_time'][] = [$time,sprintf("%.4f", $val['execTime']*1000/$val['count'])];
+            $single[$val['type']]['count'][] = [$time,$val['count']];
+            $single[$val['type']]['error'][] = [$time,$val['error']];
+//
         }
         $model = new LogModel();
 
         return $this->render('statistics', [
             'data' => $data,
+            'single' => $single,
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),

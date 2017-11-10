@@ -65,15 +65,27 @@ include(__DIR__ . '/../common/header.php')
         </div>
         <div style="height:20px"></div>
         <br />
+        <br />
         <div class="col-md-12">
 
             <div class="row">
+                <div id="request-time" style="width: 100%;height:300px"></div>
+                <div id="request-error" style="width: 100%;height:300%"></div>
+                <div id="request-count" style="width: 100%;height:300%"></div>
+
+                <div id="user-time" style="width: 100%;height:300px"></div>
+                <div id="user-error" style="width: 100%;height:300%"></div>
+                <div id="user-count" style="width: 100%;height:300%"></div>
+
+                <div id="rule-time" style="width: 100%;height:300px"></div>
+                <div id="rule-error" style="width: 100%;height:300%"></div>
+                <div id="rule-count" style="width: 100%;height:300%"></div>
+
                 <div id="request" style="width: 100%;height:400%"></div>
                 <br />
                 <div id="curl" style="width: 100%;height:400%"></div>
                 <br />
                 <div id="rule" style="width: 100%;height:400%"></div>
-                <div id="exec-time" style="width: 100%;height:200px;"></div>
                 <div id="error" style="width: 100%;height:200px;"></div>
                 <div id="warning" style="width: 100%;height:200px;"></div>
                 <div id="notice" style="width: 100%;height:200px;"></div>
@@ -139,331 +151,977 @@ include(__DIR__ . '/../common/header.php')
 <script src="http://echarts.baidu.com/asset/theme/macarons.js"></script>
 <script src="http://echarts.baidu.com/asset/theme/vintage.js"></script>
 
+
+<script>
+    var grid_left = 70
+
+    var myChart = echarts.init(document.getElementById('request-time'),'macarons');
+    var data = <?= json_encode($single['REQUEST']['exec_time'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: '请求-平均时间',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 500,
+                color: '#096'
+            }, {
+                gt: 500,
+                lte: 1000,
+                color: '#ffde33'
+            }, {
+                gt: 1000,
+                lte: 1500,
+                color: '#ff9933'
+            }, {
+                gt: 1500,
+                lte: 2000,
+                color: '#cc0033'
+            }, {
+                gt: 2000,
+                lte: 3000,
+                color: '#660099'
+            }, {
+                gt: 3000,
+                color: '#7e0023'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '平均执行时间',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 500
+                }, {
+                    yAxis: 1000
+                }, {
+                    yAxis: 1500
+                }, {
+                    yAxis: 2000
+                }, {
+                    yAxis: 2500
+                }, {
+                    yAxis: 3000
+                }]
+            }
+        }
+    });
+
+    var myChart = echarts.init(document.getElementById('request-count'),'macarons');
+    var data = <?= json_encode($single['REQUEST']['count'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: '请求-数量',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+//        visualMap: {
+//            top: 10,
+//            right: 10,
+//            pieces: [{
+//                gt: 0,
+//                lte: 500,
+//                color: '#096'
+//            }, {
+//                gt: 500,
+//                lte: 1000,
+//                color: '#ffde33'
+//            }, {
+//                gt: 1000,
+//                lte: 1500,
+//                color: '#ff9933'
+//            }, {
+//                gt: 1500,
+//                lte: 2000,
+//                color: '#cc0033'
+//            }, {
+//                gt: 2000,
+//                lte: 3000,
+//                color: '#660099'
+//            }, {
+//                gt: 3000,
+//                color: '#7e0023'
+//            }],
+//            outOfRange: {
+//                color: '#999'
+//            }
+//        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '请求量',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+//            markLine: {
+//                silent: true,
+//                data: [{
+//                    yAxis: 500
+//                }, {
+//                    yAxis: 1000
+//                }, {
+//                    yAxis: 1500
+//                }, {
+//                    yAxis: 2000
+//                }, {
+//                    yAxis: 2500
+//                }, {
+//                    yAxis: 3000
+//                }]
+//            }
+        }
+    });
+
+    var myChart = echarts.init(document.getElementById('request-error'),'macarons');
+    var data = <?= json_encode($single['REQUEST']['error'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: '请求-ERROR',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 50,
+                color: '#096'
+            }, {
+                gt: 50,
+                lte: 100,
+                color: '#ffde33'
+            }, {
+                gt: 100,
+                lte: 150,
+                color: '#ff9933'
+            }, {
+                gt: 150,
+                lte: 200,
+                color: '#cc0033'
+            }, {
+                gt: 200,
+                lte: 300,
+                color: '#660099'
+            }, {
+                gt: 300,
+                color: '#7e0023'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '错误量',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 50
+                }, {
+                    yAxis: 100
+                }, {
+                    yAxis: 150
+                }, {
+                    yAxis: 200
+                }, {
+                    yAxis: 250
+                }, {
+                    yAxis: 300
+                }]
+            }
+        }
+    });
+
+</script>
+
+<script>
+    var grid_left = 70
+
+    var myChart = echarts.init(document.getElementById('user-time'),'macarons');
+    var data = <?= json_encode($single['USER']['exec_time'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: 'PC请求-平均时间',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 200,
+                color: '#096'
+            }, {
+                gt: 200,
+                lte: 400,
+                color: '#ffde33'
+            }, {
+                gt: 400,
+                lte: 600,
+                color: '#ff9933'
+            }, {
+                gt: 600,
+                lte: 1000,
+                color: '#cc0033'
+            }, {
+                gt: 1000,
+                lte: 1200,
+                color: '#660099'
+            }, {
+                gt: 1200,
+                color: '#7e0023'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '平均执行时间',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 200
+                }, {
+                    yAxis: 400
+                }, {
+                    yAxis: 600
+                }, {
+                    yAxis: 800
+                }, {
+                    yAxis: 1000
+                }, {
+                    yAxis: 1200
+                }]
+            }
+        }
+    });
+
+    var myChart = echarts.init(document.getElementById('user-count'),'macarons');
+    var data = <?= json_encode($single['USER']['count'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: 'PC请求-数量',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+//        visualMap: {
+//            top: 10,
+//            right: 10,
+//            pieces: [{
+//                gt: 0,
+//                lte: 500,
+//                color: '#096'
+//            }, {
+//                gt: 500,
+//                lte: 1000,
+//                color: '#ffde33'
+//            }, {
+//                gt: 1000,
+//                lte: 1500,
+//                color: '#ff9933'
+//            }, {
+//                gt: 1500,
+//                lte: 2000,
+//                color: '#cc0033'
+//            }, {
+//                gt: 2000,
+//                lte: 3000,
+//                color: '#660099'
+//            }, {
+//                gt: 3000,
+//                color: '#7e0023'
+//            }],
+//            outOfRange: {
+//                color: '#999'
+//            }
+//        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '请求量',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+//            markLine: {
+//                silent: true,
+//                data: [{
+//                    yAxis: 500
+//                }, {
+//                    yAxis: 1000
+//                }, {
+//                    yAxis: 1500
+//                }, {
+//                    yAxis: 2000
+//                }, {
+//                    yAxis: 2500
+//                }, {
+//                    yAxis: 3000
+//                }]
+//            }
+        }
+    });
+
+    var myChart = echarts.init(document.getElementById('user-error'),'macarons');
+    var data = <?= json_encode($single['USER']['error'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: 'PC请求-ERROR',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 50,
+                color: '#096'
+            }, {
+                gt: 50,
+                lte: 100,
+                color: '#ffde33'
+            }, {
+                gt: 100,
+                lte: 150,
+                color: '#ff9933'
+            }, {
+                gt: 150,
+                lte: 200,
+                color: '#cc0033'
+            }, {
+                gt: 200,
+                lte: 300,
+                color: '#660099'
+            }, {
+                gt: 300,
+                color: '#7e0023'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '错误量',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 50
+                }, {
+                    yAxis: 100
+                }, {
+                    yAxis: 150
+                }, {
+                    yAxis: 200
+                }, {
+                    yAxis: 250
+                }, {
+                    yAxis: 300
+                }]
+            }
+        }
+    });
+
+</script>
+
+
+<script>
+    //rule
+
+    var myChart = echarts.init(document.getElementById('rule-time'),'macarons');
+    var data = <?= json_encode($single['RULE']['exec_time'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: '规则-平均时间',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 500,
+                color: '#096'
+            }, {
+                gt: 500,
+                lte: 1000,
+                color: '#ffde33'
+            }, {
+                gt: 1000,
+                lte: 1500,
+                color: '#ff9933'
+            }, {
+                gt: 1500,
+                lte: 2000,
+                color: '#cc0033'
+            }, {
+                gt: 2000,
+                lte: 3000,
+                color: '#660099'
+            }, {
+                gt: 3000,
+                color: '#7e0023'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '平均执行时间',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 500
+                }, {
+                    yAxis: 1000
+                }, {
+                    yAxis: 1500
+                }, {
+                    yAxis: 2000
+                }, {
+                    yAxis: 2500
+                }, {
+                    yAxis: 3000
+                }]
+            }
+        }
+    });
+
+    var myChart = echarts.init(document.getElementById('rule-count'),'macarons');
+    var data = <?= json_encode($single['RULE']['count'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: '规则-数量',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+//        visualMap: {
+//            top: 10,
+//            right: 10,
+//            pieces: [{
+//                gt: 0,
+//                lte: 500,
+//                color: '#096'
+//            }, {
+//                gt: 500,
+//                lte: 1000,
+//                color: '#ffde33'
+//            }, {
+//                gt: 1000,
+//                lte: 1500,
+//                color: '#ff9933'
+//            }, {
+//                gt: 1500,
+//                lte: 2000,
+//                color: '#cc0033'
+//            }, {
+//                gt: 2000,
+//                lte: 3000,
+//                color: '#660099'
+//            }, {
+//                gt: 3000,
+//                color: '#7e0023'
+//            }],
+//            outOfRange: {
+//                color: '#999'
+//            }
+//        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '请求量',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+//            markLine: {
+//                silent: true,
+//                data: [{
+//                    yAxis: 500
+//                }, {
+//                    yAxis: 1000
+//                }, {
+//                    yAxis: 1500
+//                }, {
+//                    yAxis: 2000
+//                }, {
+//                    yAxis: 2500
+//                }, {
+//                    yAxis: 3000
+//                }]
+//            }
+        }
+    });
+
+    var myChart = echarts.init(document.getElementById('rule-error'),'macarons');
+    var data = <?= json_encode($single['RULE']['error'])?>;
+    myChart.setOption(option = {
+        title: {
+            text: '规则-ERROR',
+            textStyle:{
+                fontSize:15
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            data: data.map(function (item) {
+                return item[0];
+            })
+        },
+        yAxis: {
+            splitLine: {
+                show: false
+            }
+        },
+        toolbox: {
+            left: 'center',
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        dataZoom: [{
+            //startValue: '2014-06-01'
+//            left: 30, //左边的距离
+//            right: 40,//右边的距离
+            bottom: 80//右边的距离
+        }, {
+            type: 'inside',
+//            realtime: true,
+            start: 30,
+            end: 70,
+            xAxisIndex: [0]
+        }],
+        visualMap: {
+            top: 10,
+            right: 10,
+            pieces: [{
+                gt: 0,
+                lte: 500,
+                color: '#096'
+            }, {
+                gt: 500,
+                lte: 1000,
+                color: '#ffde33'
+            }, {
+                gt: 1000,
+                lte: 1500,
+                color: '#ff9933'
+            }, {
+                gt: 1500,
+                lte: 2000,
+                color: '#cc0033'
+            }, {
+                gt: 2000,
+                lte: 3000,
+                color: '#660099'
+            }, {
+                gt: 3000,
+                color: '#7e0023'
+            }],
+            outOfRange: {
+                color: '#999'
+            }
+        },
+        grid: [{
+            left: grid_left,
+            right: 150,
+            top: '20%',
+            height: '35%'
+        }],
+        series: {
+            name: '错误量',
+            type: 'line',
+            data: data.map(function (item) {
+                return item[1];
+            }),
+            markLine: {
+                silent: true,
+                data: [{
+                    yAxis: 500
+                }, {
+                    yAxis: 1000
+                }, {
+                    yAxis: 1500
+                }, {
+                    yAxis: 2000
+                }, {
+                    yAxis: 2500
+                }, {
+                    yAxis: 3000
+                }]
+            }
+        }
+    });
+</script>
+
 <script>
 
-    var timeData = <?=json_encode($data['REQUEST']['time'])?>;
-    timeData = timeData.map(function (str) {
-        return str.replace('2017-', '');
-    });
-
-    option = {
-        title: {
-            text: 'REQUEST',
-            subtext: '',
-            x: 'center',
-            color: 'red'
-        },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function (params) {
-                return params[0].name + '<br/>'
-                    + params[0].seriesName + ' : ' + params[0].value + ' <br/>';
-            },
-            axisPointer: {
-                animation: false
-            }
-        },
-        legend: {
-            data:['请求量','错误'],
-            x: 'left'
-        },
-        dataZoom: [
-            {
-                show: true,
-                realtime: true,
-                start: 0,
-                end: 100,
-                xAxisIndex: [0, 1]
-            },
-            {
-                type: 'inside',
-                realtime: true,
-                start: 0,
-                end: 100,
-                xAxisIndex: [0, 1]
-            }
-        ],
-        grid: [{
-            left: 50,
-            right: 50,
-            height: '35%'
-        }, {
-            left: 50,
-            right: 50,
-            top: '57%',
-            height: '35%'
-        }],
-        xAxis : [
-            {
-                type : 'category',
-                boundaryGap : false,
-                axisLine: {
-                    onZero: true
-                },
-                data: timeData
-            },
-            {
-                gridIndex: 1,
-                type : 'category',
-                boundaryGap : false,
-                axisLine: {onZero: true},
-                data: timeData,
-                position: 'top'
-            }
-        ],
-        yAxis : [
-            {
-                name : '请求量',
-                type : 'value'
-                //max : 5000
-            },
-            {
-                gridIndex: 1,
-                name : '错误',
-                type : 'value',
-                inverse: true
-            }
-        ],
-        series : [
-            {
-                name:'请求量',
-                type:'line',
-                symbolSize: 8,
-                hoverAnimation: false,
-                data:   <?=json_encode($data['REQUEST']['count'])?>
-
-            },
-            {
-                name:'错误',
-                type:'line',
-                xAxisIndex: 1,
-                yAxisIndex: 1,
-                symbolSize: 8,
-                hoverAnimation: false,
-                data: <?=json_encode($data['REQUEST']['error'])?>
-
-            }
-        ]
-    };
-    var myChart = echarts.init(document.getElementById('request'),'macarons');
-    myChart.setOption(option);
-
-
-    //curl
-
-    var timeData = <?=json_encode($data['CURL']['time'])?>;
-    timeData = timeData.map(function (str) {
-        return str.replace('2017-', '');
-    });
-
-    option = {
-        title: {
-            text: 'CURL',
-            subtext: '',
-            x: 'center',
-            color: 'red'
-        },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function (params) {
-                return params[0].name + '<br/>'
-                    + params[0].seriesName + ' : ' + params[0].value + ' <br/>';
-            },
-            axisPointer: {
-                animation: false
-            }
-        },
-        legend: {
-            data:['请求量','错误'],
-            x: 'left'
-        },
-        dataZoom: [
-            {
-                show: true,
-                realtime: true,
-                start: 0,
-                end: 100,
-                xAxisIndex: [0, 1]
-            },
-            {
-                type: 'inside',
-                realtime: true,
-                start: 0,
-                end: 100,
-                xAxisIndex: [0, 1]
-            }
-        ],
-        grid: [{
-            left: 50,
-            right: 50,
-            height: '35%'
-        }, {
-            left: 50,
-            right: 50,
-            top: '57%',
-            height: '35%'
-        }],
-        xAxis : [
-            {
-                type : 'category',
-                boundaryGap : false,
-                axisLine: {
-                    onZero: true
-                },
-                data: timeData
-            },
-            {
-                gridIndex: 1,
-                type : 'category',
-                boundaryGap : false,
-                axisLine: {onZero: true},
-                data: timeData,
-                position: 'top'
-            }
-        ],
-        yAxis : [
-            {
-                name : '请求量',
-                type : 'value'
-                //max : 5000
-            },
-            {
-                gridIndex: 1,
-                name : '错误',
-                type : 'value',
-                inverse: true
-            }
-        ],
-        series : [
-            {
-                name:'请求量',
-                type:'line',
-                symbolSize: 8,
-                hoverAnimation: false,
-                data:   <?=json_encode($data['CURL']['count'])?>
-
-            },
-            {
-                name:'错误',
-                type:'line',
-                xAxisIndex: 1,
-                yAxisIndex: 1,
-                symbolSize: 8,
-                hoverAnimation: false,
-                data: <?=json_encode($data['CURL']['error'])?>
-
-            }
-        ]
-    };
-    myChart = echarts.init(document.getElementById('curl'),'macarons');
-    myChart.setOption(option);
-
-    //rule
-    var timeData = <?=json_encode($data['RULE']['time'])?>;
-    timeData = timeData.map(function (str) {
-        return str.replace('2017-', '');
-    });
-
-    option = {
-        title: {
-            text: 'RULE',
-            subtext: '',
-            x: 'center',
-            color: 'red'
-        },
-        tooltip: {
-            trigger: 'axis',
-            formatter: function (params) {
-                return params[0].name + '<br/>'
-                    + params[0].seriesName + ' : ' + params[0].value + ' <br/>';
-            },
-            axisPointer: {
-                animation: false
-            }
-        },
-        legend: {
-            data:['请求量','错误'],
-            x: 'left'
-        },
-        dataZoom: [
-            {
-                show: true,
-                realtime: true,
-                start: 0,
-                end: 100,
-                xAxisIndex: [0, 1]
-            },
-            {
-                type: 'inside',
-                realtime: true,
-                start: 0,
-                end: 100,
-                xAxisIndex: [0, 1]
-            }
-        ],
-        grid: [{
-            left: 50,
-            right: 50,
-            height: '35%'
-        }, {
-            left: 50,
-            right: 50,
-            top: '57%',
-            height: '35%'
-        }],
-        xAxis : [
-            {
-                type : 'category',
-                boundaryGap : false,
-                axisLine: {
-                    onZero: true
-                },
-                data: timeData
-            },
-            {
-                gridIndex: 1,
-                type : 'category',
-                boundaryGap : false,
-                axisLine: {onZero: true},
-                data: timeData,
-                position: 'top'
-            }
-        ],
-        yAxis : [
-            {
-                name : '请求量',
-                type : 'value'
-                //max : 5000
-            },
-            {
-                gridIndex: 1,
-                name : '错误',
-                type : 'value',
-                inverse: true
-            }
-        ],
-        series : [
-            {
-                name:'请求量',
-                type:'line',
-                symbolSize: 8,
-                hoverAnimation: false,
-                data:   <?=json_encode($data['RULE']['count'])?>
-
-            },
-            {
-                name:'错误',
-                type:'line',
-                xAxisIndex: 1,
-                yAxisIndex: 1,
-                symbolSize: 8,
-                hoverAnimation: false,
-                data: <?=json_encode($data['RULE']['error'])?>
-
-            }
-        ]
-    };
-    myChart = echarts.init(document.getElementById('rule'),'macarons');
-    myChart.setOption(option);
 </script>
 <?php include(__DIR__ . '/../common/footer.php') ?>
