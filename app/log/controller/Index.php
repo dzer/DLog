@@ -761,12 +761,14 @@ class Index extends Controller
     }
 
     public function statistics(){
-        $time_y = Mll::app()->request->get('time-year', date('Y'));
         $project = Mll::app()->request->get('project', '');
         $log_type = Mll::app()->request->get('log_type', '');
         $timeLevel = Mll::app()->request->get('time-level', 'hour');
-        $time_range = Mll::app()->request->get('time_range', date('Y-m-d').' - '.date('Y-m-d'));
-        $timeArr = explode(' - ',$time_range);
+        $timeRange = Mll::app()->request->get('time_range');
+        if(!$timeRange){
+            $timeRange = date('Y-m-d').' - '.date('Y-m-d');
+        }
+        $timeArr = explode(' - ',$timeRange);
         $timeFrom = $timeArr[0];
         $timeTo = $timeArr[1];
         $where = $ret = [];

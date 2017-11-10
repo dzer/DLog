@@ -7,7 +7,7 @@
 </style>
 <div class="container-fluid theme-showcase" role="main">
     <div class="page-header">
-        <h2>历史数据</h2>
+        <h2>历史数据(<?=$earliest?>)</h2>
     </div>
     <div class="row">
         <div class="col-md-12">

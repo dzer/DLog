@@ -115,8 +115,9 @@ class History extends Controller
                 $where['content.responseCode']['$eq'] = intval($responseCode);
             }
         }
+
         $mongoConfig = Mll::app()->config->get('db.mongo');
-        $db = 'system_log_' . date('m_d', strtotime($start_time)).'_online';
+        $db = 'system_log_' . date('y_m_d', strtotime($start_time)).'_online';
         $mongoConfig['database'] = $db;
         $mongo = new Mongo($mongoConfig);
         $collection = $mongo->selectCollection('log');
@@ -127,9 +128,23 @@ class History extends Controller
         //计算分页
         //$page_count = ceil($count / $page_size);
         $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
+        //最早时间
+        $ret = Common::objectToArray($mongo->setDBName('admin')->executeCommand(['listDatabases' => true]));
+        $dbList = isset($ret[0]['databases']) ? $ret[0]['databases'] : [];
+        //system_log_11_09_online
+        $earliest = '';
+        if($dbList){
+            foreach($dbList as $k=>$v){
+                if(false !== strpos($v['name'],'online')){
+                    $earliest = str_replace(['system_log_','_online','_'],['','','-'],$v['name']);
+                    break;
+                }
+            }
+        }
 
         return $this->render('just', [
             'rs' => $rs,
+            'earliest' => 'from:'.$earliest,
             'page' => [
                 'page' => $page,
                 'page_size' => $page_size,
