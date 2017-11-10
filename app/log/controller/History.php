@@ -144,7 +144,7 @@ class History extends Controller
 
         return $this->render('just', [
             'rs' => $rs,
-            'earliest' => 'from:'.$earliest,
+            'earliest' => '(from:'.$earliest.')',
             'page' => [
                 'page' => $page,
                 'page_size' => $page_size,
