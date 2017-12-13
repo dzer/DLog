@@ -244,6 +244,11 @@ class LogService
                     ],
                 ]
             ]);*/
+            $mongoConfig = Mll::app()->config->get('db.mongo');
+            $mongoConfig['database'] = 'admin';
+            $mongoConfig['username'] = 'root';
+            $mongoConfig['password'] = 'dsj4wKI*FWLsdf4';
+            $mongo = new Mongo($mongoConfig);
             $mongo->setDBName('system_log_' . date('m_d', strtotime('-4 day')));
             $mongo->executeCommand(['dropDatabase' => 1]);
             Cache::set($cacheKey, 1, 86400);

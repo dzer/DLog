@@ -45,6 +45,7 @@ class LogModel extends Model
         'web_php_08' => 'web_php_08',
         'web_php_13' => 'web_php_13',
         'web_php_16' => 'web_php_16',
+        'web_php_17' => 'web_php_17',
     ];
 
     public function getProjects($db = 'system_log', $expire = 86400)

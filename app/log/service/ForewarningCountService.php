@@ -121,7 +121,18 @@ class ForewarningCountService
             }
         }
         unset($model->servers['web_php_16']);
+
         $diff_servers = array_diff($model->servers, $servers);
+
+        //13 17 互备
+        if (in_array('web_php_13', $servers) && in_array('web_php_17', $diff_servers)) {
+            $key = array_search('web_php_17', $diff_servers);
+            unset($diff_servers[$key]);
+        }
+        if (in_array('web_php_17', $servers) && in_array('web_php_13', $diff_servers)) {
+            $key = array_search('web_php_13', $diff_servers);
+            unset($diff_servers[$key]);
+        }
 
         if (!empty($diff_servers) && !(date('H') == 0 && date('i') < 5)) {
             //判断mq是否链接成功
