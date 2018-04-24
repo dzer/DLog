@@ -96,7 +96,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'projects' => $model->getProjects(),
             'types' => array_merge($model->types, ['USER' => 'PC请求']),
-            'servers' => $model->servers,
+            'servers' => $model->getServers(),
         ]);
     }
 
@@ -205,7 +205,7 @@ class Index extends Controller
             ],
             'projects' => $model->getProjects(),
             'types' => $model->types,
-            'servers' => $model->servers,
+            'servers' => $model->getServers(),
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
         ]);
@@ -313,7 +313,7 @@ class Index extends Controller
             ],
             'projects' => $model->getProjects(),
             'types' => $model->types,
-            'servers' => $model->servers,
+            'servers' => $model->getServers(),
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
         ]);
@@ -563,7 +563,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
             'projects' => $model->getProjects(),
-            'servers' => $model->servers,
+            'servers' => $model->getServers(),
         ]);
     }
 
@@ -642,7 +642,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
             'projects' => $model->getProjects(),
-            'servers' => $model->servers,
+            'servers' => $model->getServers(),
             '_g' => $_GET
         ]);
     }
@@ -838,7 +838,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
             'projects' => $model->getProjects(self::SYSTEM_LOG),
-            'servers' => $model->servers,
+            'servers' => $model->getServers(),
             '_g' => $_GET
         ]);
     }

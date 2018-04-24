@@ -125,7 +125,7 @@ class LogService
                 $log['content']['isAjax'] = isset($log['content']['server']['HTTP_X_REQUESTED_WITH'])
                 && $log['content']['server']['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' ? 1 : 0;
                 $log['content']['requestSource'] = isset($log['content']['server']['HTTP_USER_AGENT'])
-                    ? self::checkRequestSource($log['content']['server']['HTTP_USER_AGENT']) : '';
+                    ? self::checkRequestSource($log['content']['server']['HTTP_USER_AGENT']) : 'other';
                 $date = date('Y-m-d', intval($log['microtime']));
                 $hour = date('H', intval($log['microtime']));
 
@@ -135,11 +135,14 @@ class LogService
                     //Mll::app()->log->debug('用户请求！', $log);
                     $log['type'] = 'USER';
                 }
-                $key = "{$date}#{$hour}#{$log['project']}#{$log['type']}";
+                //判断是否为50服务器
+                $server = $log['server'] == 'server50' ? 'server50' : 'other';
+                $key = "{$date}#{$hour}#{$log['project']}#{$server}#{$log['type']}";
 
                 $countHour[$key]['set'] = [
                     'date' => $date,
                     'hour' => $hour,
+                    'server' => $server,
                     'project' => $log['project'],
                     'type' => $log['type']
                 ];
@@ -153,6 +156,9 @@ class LogService
 
                 $countHour[$key]['inc']['count'] += 1;
                 $countHour[$key]['inc']['execTime'] += $log['content']['execTime'];
+                $countHour[$key]['inc']['requestSource_' . $log['content']['requestSource']] =
+                    isset($countHour[$key]['inc']['requestSource_' . $log['content']['requestSource']])
+                        ? $countHour[$key]['inc']['requestSource_' . $log['content']['requestSource']] + 1 : 1;
                 $countHour[$key]['inc']['level_' . $log['level']] =
                     isset($countHour[$key]['inc']['level_' . $log['level']]) ? $countHour[$key]['inc']['level_' . $log['level']] + 1 : 1;
                 if (isset($log['content']['responseCode'])) {

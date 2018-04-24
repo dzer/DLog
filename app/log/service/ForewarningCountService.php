@@ -111,6 +111,9 @@ class ForewarningCountService
         if (empty($config) || empty($config['enable'])) {
             return false;
         }
+        if (!(date('H') % 2 == 0 && date('i') < 5)) {
+            return false;
+        }
         $model = new LogModel();
         $db = 'system_log_' . date('m_d');
         $rs = $model->countByServer($db, ['time' => ['$gt' => date('Y-m-d H:i:s', time() - ($config['time'] * 60))]]);
@@ -120,21 +123,8 @@ class ForewarningCountService
                 $servers[] = $_list['_id']['server'];
             }
         }
-        unset($model->servers['web_php_16']);
 
-        $diff_servers = array_diff($model->servers, $servers);
-
-        //13 17 互备
-        if (in_array('web_php_13', $servers) && in_array('web_php_17', $diff_servers)) {
-            $key = array_search('web_php_17', $diff_servers);
-            unset($diff_servers[$key]);
-        }
-        if (in_array('web_php_17', $servers) && in_array('web_php_13', $diff_servers)) {
-            $key = array_search('web_php_13', $diff_servers);
-            unset($diff_servers[$key]);
-        }
-
-        if (!empty($diff_servers) && !(date('H') == 0 && date('i') < 5)) {
+        if (!empty($servers)) {
             //判断mq是否链接成功
             $msgNum = 0;
             try {
@@ -146,8 +136,8 @@ class ForewarningCountService
             $mq_msg = !empty($mq_msg) ? 'mq错误：' . $mq_msg : 'mq未处理数量：' . $msgNum;
             return [
                 'time' => date('Y-m-d H:i:s'),
-                'msg' => 'DLOG日志报警：近' . $config['time'] . '分钟，' . implode('，', $diff_servers)
-                    . ' 没有日志记录！！！' . $mq_msg,
+                'msg' => 'DLOG日志报警：近' . $config['time'] . '分钟，' . implode('，', $servers)
+                    . ' 有日志记录！！！' . $mq_msg,
                 'sendType' => $config['sendType']
             ];
         }

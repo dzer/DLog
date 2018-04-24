@@ -30,6 +30,7 @@ class LogModel extends Model
 
     public $types = [
         'REQUEST' => '请求',
+        'USER' => 'PC请求',
         'CURL' => '接口',
         'RULE' => '规则',
         'MYSQL' => 'MYSQL',
@@ -46,6 +47,8 @@ class LogModel extends Model
         'web_php_13' => 'web_php_13',
         'web_php_16' => 'web_php_16',
         'web_php_17' => 'web_php_17',
+        'server50' => 'server50',
+        'java order' => 'java order',
     ];
 
     public function getProjects($db = 'system_log', $expire = 86400)
@@ -92,6 +95,28 @@ class LogModel extends Model
             $projects = json_decode($project_rs, true);
         }
         return $projects;
+    }
+
+    public function getServers($db = 'system_log', $expire = 86400)
+    {
+        $cache_key = 'log_count_servers';
+        Cache::cut('file');
+        $server_rs = Cache::get($cache_key);
+        if ($server_rs === false) {
+            $db = $db . date('m_d');
+            $rs = $this->countByServer($db, ['time' => ['$gt' => date('Y-m-d H:i:s', time() - 1800)]]);
+            $curr_servers = [];
+            if (!empty($rs[0]['result'])) {
+                foreach ($rs[0]['result'] as $_list) {
+                    $curr_servers[$_list['_id']['server']] = $_list['_id']['server'];
+                }
+            }
+            $servers = array_merge($curr_servers, $this->servers);
+            Cache::set($cache_key, json_encode($servers), $expire);
+        } else {
+            $servers = json_decode($server_rs, true);
+        }
+        return $servers;
     }
 
     /**
