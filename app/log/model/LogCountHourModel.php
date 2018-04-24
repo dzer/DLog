@@ -238,6 +238,10 @@ class LogCountHourModel extends Model
                         'execTime_1000' => ['$sum' => '$execTime_1000'],
                         'execTime_5000' => ['$sum' => '$execTime_5000'],
                         'execTime_5000+' => ['$sum' => '$execTime_5000+'],
+                        'requestSource_pc' => ['$sum' => '$requestSource_pc'],
+                        'requestSource_mobile' => ['$sum' => '$requestSource_mobile'],
+                        'requestSource_robot' => ['$sum' => '$requestSource_robot'],
+                        'requestSource_other' => ['$sum' => '$requestSource_other'],
                     ]
                 ],
                 ['$sort' => ['count' => -1]],

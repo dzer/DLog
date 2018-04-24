@@ -14,6 +14,13 @@
                         </select>
                     </div>
                     <div class="form-group" style="margin-left: 10px">
+                        <label>服务器：</label>
+                        <select name="server" class="form-control">
+                            <option value="">请选择</option>
+                            <?= \app\common\helpers\Common::optionHtml($servers, 'server');?>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-left: 10px">
                         <label>时间：</label>
                         <input type="text" name="curr_time" class="form-control" placeholder="时间"
                                onclick="laydate({ istime: true, format: 'YYYY-MM-DD'})" value="<?= isset($_GET['curr_time']) ? $_GET['curr_time'] : ''?>">
@@ -29,6 +36,10 @@
                     <tr>
                         <th>日志类型</th>
                         <th>记录次数</th>
+                        <th>PC</th>
+                        <th>MOBILE</th>
+                        <th>ROBOT</th>
+                        <th>OTHER</th>
                         <th>平均执行时间(ms)</th>
                         <th>WARNING</th>
                         <th>ERROR</th>
@@ -47,6 +58,10 @@
                             <tr>
                                 <td><?= isset($types[$v['_id']['type']]) ? $types[$v['_id']['type']] : ''?></td>
                                 <td><?= $v['count']?></td>
+                                <td><?= isset($v['requestSource_pc']) ? $v['requestSource_pc'] : '-'?></td>
+                                <td><?= isset($v['requestSource_mobile']) ? $v['requestSource_mobile'] : '-'?></td>
+                                <td><?= isset($v['requestSource_robot']) ? $v['requestSource_robot'] : '-'?></td>
+                                <td><?= isset($v['requestSource_other']) ? $v['requestSource_other'] : '-'?></td>
                                 <td><?= sprintf('%.1f', ($v['count'] > 0 ? ($v['execTime']/$v['count']) * 1000 : '')) ?> ms</td>
                                 <td>
                                     <a style="<?= $v['error'] > 0 ? 'color:#d9534f;font-weight:bold' : ''?>"

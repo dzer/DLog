@@ -27,6 +27,13 @@ include(__DIR__ . '/../common/header.php')
                         <?= Common::optionHtml($projects, 'project');?>
                     </select>
                 </div>
+                <div class="form-group" style="margin-left: 10px">
+                    <label>服务器：</label>
+                    <select name="server" class="form-control">
+                        <option value="">请选择</option>
+                        <?= \app\common\helpers\Common::optionHtml($servers, 'server');?>
+                    </select>
+                </div>
 
                 <div class="form-group" style="margin-left: 10px">
                     时间维度:

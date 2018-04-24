@@ -140,9 +140,6 @@ class Index extends Controller
         if (!empty($log_type)) {
             $where['type'] = $log_type;
         }
-        if ($log_type == 'USER') {
-            $where['type'] = LOG_TYPE_FINISH;
-        }
         if (!empty($request_id)) {
             $where['requestId'] = $request_id;
         }
@@ -530,6 +527,7 @@ class Index extends Controller
         $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
         $log_type = Mll::app()->request->get('log_type');
         $project = Mll::app()->request->get('project', 'all');
+        $server = Mll::app()->request->get('server');
 
         $_GET['curr_time'] = $curr_time;
         $_GET['log_type'] = $log_type;
@@ -544,6 +542,9 @@ class Index extends Controller
         }
         if (!empty($curr_time)) {
             $where['date'] = $curr_time;
+        }
+        if (!empty($server)) {
+            $where['server'] = $server;
         }
         Cache::cut('file');
         $expire = 60;
@@ -563,7 +564,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
             'projects' => $model->getProjects(),
-            'servers' => $model->getServers(),
+            'servers' => array('server50' => 'server50', 'other' => 'other'),
         ]);
     }
 
@@ -765,6 +766,7 @@ class Index extends Controller
         $log_type = Mll::app()->request->get('log_type', '');
         $timeLevel = Mll::app()->request->get('time-level', 'hour');
         $timeRange = Mll::app()->request->get('time_range');
+        $server = Mll::app()->request->get('server');
         if(!$timeRange){
             $timeRange = date('Y-m-d').' - '.date('Y-m-d');
         }
@@ -777,6 +779,9 @@ class Index extends Controller
         }
         if (!empty($log_type)) {
             $where['type'] = $log_type;
+        }
+        if (!empty($server)) {
+            $where['server'] = $server;
         }
         //where -> date
         if($timeFrom == $timeTo){
@@ -838,7 +843,7 @@ class Index extends Controller
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction(),
             'types' => array_merge($model->types, ['USER' => '用户请求']),
             'projects' => $model->getProjects(self::SYSTEM_LOG),
-            'servers' => $model->getServers(),
+            'servers' => array('server50' => 'server50', 'other' => 'other'),
             '_g' => $_GET
         ]);
     }

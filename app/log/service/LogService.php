@@ -94,7 +94,7 @@ class LogService
                     foreach ($_log as $k => $v) {
                         $where = explode('#', $k);
                         $updateNum += $mongo->update(
-                            ['date' => $where[0], 'hour' => $where[1], 'project' => $where[2], 'type' => $where[3]],
+                            ['date' => $where[0], 'hour' => $where[1], 'project' => $where[2], 'server' => $where[3], 'type' => $where[4]],
                             [
                                 '$inc' => $v['inc'],
                                 '$set' => $v['set']
@@ -135,8 +135,11 @@ class LogService
                     //Mll::app()->log->debug('用户请求！', $log);
                     $log['type'] = 'USER';
                 }
+                if (empty($log['server'])) {
+                    $log['server'] = 'unknown';
+                }
                 //判断是否为50服务器
-                $server = $log['server'] == 'server50' ? 'server50' : 'other';
+                $server = isset($log['server']) && $log['server'] == 'server50' ? 'server50' : 'other';
                 $key = "{$date}#{$hour}#{$log['project']}#{$server}#{$log['type']}";
 
                 $countHour[$key]['set'] = [
@@ -276,10 +279,10 @@ class LogService
 
         foreach ($traceLog as $v) {
             if (isset($v['content']['traceId'])) {
-                $traceIds[] = $v['content']['traceId'];
+                $traceIds[$v['content']['traceId']] = $v['content']['traceId'];
             }
         }
-
+        $traceIds = array_values($traceIds);
         $version_sort = array_flip(Common::version_sort($traceIds));
         foreach ($traceLog as &$v) {
             if (isset($version_sort[$v['content']['traceId']])) {
@@ -342,7 +345,7 @@ class LogService
         if (self::dstrpos($userAgent, $kw_spiders)) {
             return 'robot';
         }
-        return '';
+        return 'other';
     }
 
     public static function dstrpos($string, $arr, $returnValue = false)

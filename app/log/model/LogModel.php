@@ -45,7 +45,7 @@ class LogModel extends Model
         'web_php_07' => 'web_php_07',
         'web_php_08' => 'web_php_08',
         'web_php_13' => 'web_php_13',
-        'web_php_16' => 'web_php_16',
+        'web_php_016' => 'web_php_016',
         'web_php_17' => 'web_php_17',
         'server50' => 'server50',
         'java order' => 'java order',
@@ -103,7 +103,7 @@ class LogModel extends Model
         Cache::cut('file');
         $server_rs = Cache::get($cache_key);
         if ($server_rs === false) {
-            $db = $db . date('m_d');
+            $db = $db . '_' . date('m_d');
             $rs = $this->countByServer($db, ['time' => ['$gt' => date('Y-m-d H:i:s', time() - 1800)]]);
             $curr_servers = [];
             if (!empty($rs[0]['result'])) {
