@@ -74,7 +74,7 @@
                                 <td style="padding-left: <?= ($count * 20) ?>px">
                                     <div>
                                     <span class="label label-<?= $method_style ?>"><?= isset($log['content']['method']) ? $log['content']['method'] : '' ?></span>
-                                    <a href="#" class="line" onclick="showData('<?= $k ?>')"><?= isset($log['content']['url']) ? $log['content']['url'] : $log['message'] ?></a>
+                                    <a href="#" class="line" onclick="showData('<?= $k ?>')"><?= isset($log['content']['url']) ? htmlspecialchars($log['content']['url']) : $log['message'] ?></a>
                                     </div>
                                     <?php if (!empty($log['content']['errorMessage'])) {?>
                                         <span class="text-danger" style="display: block; margin: 5px; word-wrap:break-word; word-break:break-all; ">

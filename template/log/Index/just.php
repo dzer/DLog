@@ -118,7 +118,7 @@
                             <td>
                                 <div>
                                     <span class="label label-<?= $method_style ?>"><?= isset($log['content']['method']) ? $log['content']['method'] : ''?></span>
-                                    <a class="line" target="_blank" style="<?= $log['content']['traceId'] == 0 ? 'font-weight:bold' : ''?>" href="/log/Index/trace?request_id=<?= $log['requestId'] ?>&time=<?= urlencode($log['time'])?>"><?= $log['content']['url'] ?></a>
+                                    <a class="line" target="_blank" style="<?= $log['content']['traceId'] == 0 ? 'font-weight:bold' : ''?>" href="/log/Index/trace?request_id=<?= $log['requestId'] ?>&time=<?= urlencode($log['time'])?>"><?= htmlspecialchars($log['content']['url']) ?></a>
                                 </div>
                                 <?php if (!empty($log['content']['errorMessage'])) {?>
                                 <span class="text-danger" style="display: block; margin: 5px; word-wrap:break-word; word-break:break-all; ">
