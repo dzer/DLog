@@ -37,6 +37,7 @@ class LogModel extends Model
         'MQ' => 'MQ',
         'MEMCACHE' => '缓存',
         'SYSTEM' => '系统',
+        'REMARK' => '备注',
     ];
 
     public $servers = [

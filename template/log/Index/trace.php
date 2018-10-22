@@ -151,12 +151,12 @@
         var rs = <?= $info ?>;
         function showData(id) {
             var str = '<tr><td>Time</td> <td>' + rs[id]['time'] + '</td></tr>'
-                +'<tr><td>URL</td><td style="word-break: break-all">' + rs[id]['content']['url'] + '</td></tr><tr>'
-                +'<tr><td>Method</td><td>' + rs[id]['content']['method'] + '</td></tr><tr>'
-                +'<tr><td>请求参数</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestParams'])) + '</pre></td></tr><tr>'
-                +'<tr><td>超时时间</td><td>' + rs[id]['content']['timeout'] + 's</td></tr><tr>'
-                +'<tr><td>错误消息</td><td>' + rs[id]['content']['errorMessage'] + '</td></tr><tr>'
-                +'<tr><td>日志</td><td><pre>' + formatJson(JSON.stringify(rs[id])) + '</pre></td></tr><tr>';
+                +'<tr><td>URL</td><td style="word-break: break-all">' + rs[id]['content']['url'] + '</td></tr>'
+                + (rs[id]['content']['method'] ? '<tr><td>Method</td><td>' + rs[id]['content']['method'] + '</td></tr>' : '')
+                + (rs[id]['content']['requestParams'] ? '<tr><td>请求参数</td><td><pre>' + formatJson(JSON.stringify(rs[id]['content']['requestParams'])) + '</pre></td></tr>' : '')
+                + (rs[id]['content']['timeout'] ? '<tr><td>超时时间</td><td>'  + rs[id]['content']['timeout'] + 's</td></tr>' : '')
+                + (rs[id]['content']['errorMessage'] ? '<tr><td>错误消息</td><td>' + rs[id]['content']['errorMessage'] + '</td></tr>' : '')
+                +'<tr><td>日志</td><td><pre>' + formatJson(JSON.stringify(rs[id])) + '</pre></td></tr>';
             $('#request-content').html(str);
             $('#myModal').modal();
         }
