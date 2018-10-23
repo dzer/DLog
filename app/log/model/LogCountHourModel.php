@@ -118,7 +118,10 @@ class LogCountHourModel extends Model
                         'error' => ['$sum' => '$level_error'],
                         'timeSum' => ['$sum' => '$execTime'],
                         'code_200' => ['$sum' => '$httpCode_200'],
-                        'code_300' => ['$sum' => '$httpCode_300']
+                        'code_300' => ['$sum' => '$httpCode_300'],
+                        'code_0' => ['$sum' => '$httpCode_0'],
+                        'code_400' => ['$sum' => '$httpCode_400'],
+                        'code_500' => ['$sum' => '$httpCode_500']
                     ]
                 ],
                 ['$sort' => ['date' => -1]],
@@ -137,7 +140,7 @@ class LogCountHourModel extends Model
                     $hour = intval($_count['_id']['date']);
                     $time[$hour] = $_count['timeSum'] / $_count['count'];
                     $success[$hour] = $_count['code_200'] + $_count['code_300'];
-                    $fail[$hour] = $_count['count'] - $success[$hour];
+                    $fail[$hour] = $_count['code_0'] + $_count['code_400'] + $_count['code_500'];
                     $error[$hour] = $_count['error'];
                 }
             }
