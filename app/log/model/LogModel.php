@@ -748,4 +748,44 @@ class LogModel extends Model
         $mongo = new Mongo();
         return Common::objectToArray($mongo->setDBName($db)->executeCommand($countArr));
     }
+
+    public function getCacheHosts($db = 'system_log', $expire = 86400) {
+        $cache_key = 'log_count_cache_hosts';
+        Cache::cut('file');
+        $curr_hosts = Cache::get($cache_key);
+        if ($curr_hosts === false) {
+            $db = $db . '_' . date('m_d');
+            $countArr = [
+                'aggregate' => 'log_count_cache',
+                'pipeline' => [
+                    [
+                        '$project' => [
+                            'host' => 1,
+                        ]
+                    ],
+                    [
+                        '$group' => [
+                            '_id' => [
+                                'host' => '$host',
+                            ],
+                            'count' => ['$sum' => 1],
+                        ]
+                    ],
+                ],
+                'allowDiskUse' => true
+            ];
+            $mongo = new Mongo();
+            $rs = Common::objectToArray($mongo->setDBName($db)->executeCommand($countArr));
+            $curr_hosts = ['all' => '请选择'];
+            if (!empty($rs[0]['result'])) {
+                foreach ($rs[0]['result'] as $_list) {
+                    $curr_hosts[$_list['_id']['host']] = $_list['_id']['host'];
+                }
+            }
+            Cache::set($cache_key, json_encode($curr_hosts), $expire);
+        } else {
+            $curr_hosts = json_decode($curr_hosts, true);
+        }
+        return $curr_hosts;
+    }
 }

@@ -71,7 +71,7 @@ class LogService
             $logs[] = $msg;
         }
         //分析日志并存储
-        $insertNum = $updateNum = 0;
+        $insertNum = $updateNum = $cacheUpdateNum = 0;
         if (!empty($logs)) {
             $logArr = self::countLogByHour($logs);
             unset($logs);
@@ -104,14 +104,33 @@ class LogService
                     }
                 }
             }
+
+            if (!empty($logArr['countCache'])) {
+                foreach ($logArr['countCache'] as $date => $_log) {
+                    $db = 'system_log_' . $date;
+                    $mongo = new Mongo();
+                    $mongo->setDBName($db)->selectCollection('log_count_cache');
+                    foreach ($_log as $k => $v) {
+                        $where = explode('#', $k);
+                        $cacheUpdateNum += $mongo->update(
+                            ['date' => $where[0], 'key' => $where[1], 'host' => $where[2]],
+                            [
+                                '$inc' => $v['inc'],
+                                '$set' => $v['set']
+                            ],
+                            ['upsert' => true]
+                        );
+                    }
+                }
+            }
         }
-        Mll::app()->log->debug('inc:' . $insertNum . ', update:' . $updateNum);
-        return 'inc:' . $insertNum . ', update:' . $updateNum;
+        Mll::app()->log->debug('inc:' . $insertNum . ', update:' . $updateNum. ', cache_update:' . $cacheUpdateNum);
+        return 'inc:' . $insertNum . ', update:' . $updateNum . ', cache_update:' . $cacheUpdateNum;
     }
 
     public static function countLogByHour($logs)
     {
-        $logArr = $countHourArr = $countHour = [];
+        $logArr = $countHourArr = $countHour = $countCache = [];
         foreach ($logs as $log) {
             $log = json_decode($log, true);
             if (!empty($log)) {
@@ -202,12 +221,81 @@ class LogService
                     }
                 }
 
+                if ($log['type'] == 'REMARK' && (!empty($log['content']['cache']) || !empty($log['content']['cache_get']))) {
+                    self::countCacheLog($log, $countCache);
+                }
+
                 $db_key = date('m_d', intval($log['microtime']));
                 $countHourArr[$db_key] = $countHour;
                 $logArr[$db_key][] = $log;
+                $countCacheArr[$db_key] = $countCache;
             }
         }
-        return ['log' => $logArr, 'countHour' => $countHourArr];
+        return ['log' => $logArr, 'countHour' => $countHourArr, 'countCache' => $countCacheArr];
+    }
+
+    public static function countCacheLog($log, &$countCache) {
+        $date = date('Y-m-d', intval($log['microtime']));
+        if (!empty($log['content']['cache'])) {
+            foreach ($log['content']['cache'] as $cache) {
+                $cache_key = "{$date}#{$cache['key']}#{$cache['host']}";
+                $countCache[$cache_key]['set'] = [
+                    'date' => $date,
+                    'key' => $cache['key'],
+                    'host' => $cache['host'],
+                    'request_uri' => $log['content']['request_uri'],
+                    'php' => $log['content']['php'],
+                    'length' => $cache['length'],
+                    'expire' => $cache['expire']
+                ];
+
+                if (!isset($countCache[$cache_key]['inc'])) {
+                    $countCache[$cache_key]['inc'] = [
+                        'count' => 0,
+                        'get' => 0,
+                        'set' => 0,
+                        'set_fail' => 0,
+                        'get_fail' => 0
+                    ];
+                }
+                $countCache[$cache_key]['inc']['count'] += 1;
+                $countCache[$cache_key]['inc']['set'] += 1;
+                if (isset($cache['rs']) && !$cache['rs']) {
+                    $countCache[$cache_key]['inc']['set_fail'] += 1;
+                }
+            }
+        }
+
+        if (!empty($log['content']['cache_get'])) {
+            foreach ($log['content']['cache_get'] as $cache) {
+                $cache_key = "{$date}#{$cache['key']}#{$cache['host']}";
+                if (!isset($countCache[$cache_key]['set'])) {
+                    $countCache[$cache_key]['set'] = [
+                        'date' => $date,
+                        'key' => $cache['key'],
+                        'host' => $cache['host'],
+                        'request_uri' => $log['content']['request_uri'],
+                        'php' => $log['content']['php'],
+                        'length' => $cache['length']
+                    ];
+                }
+
+                if (!isset($countCache[$cache_key]['inc'])) {
+                    $countCache[$cache_key]['inc'] = [
+                        'count' => 0,
+                        'get' => 0,
+                        'set' => 0,
+                        'set_fail' => 0,
+                        'get_fail' => 0
+                    ];
+                }
+                $countCache[$cache_key]['inc']['count'] += 1;
+                $countCache[$cache_key]['inc']['get'] += 1;
+                if (isset($cache['rs']) && !$cache['rs']) {
+                    $countCache[$cache_key]['inc']['get_fail'] += 1;
+                }
+            }
+        }
     }
 
     /**

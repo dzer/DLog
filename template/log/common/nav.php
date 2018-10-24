@@ -19,6 +19,7 @@
                 ?>
                 <li class="<?= $action == 'index' ? 'active' : ''?>"><a href="/log/Index/index">仪表盘</a></li>
                 <li class="<?= $control== 'Index'&&$action == 'just' ? 'active' : ''?>"><a href="/log/Index/just">最近运行</a></li>
+                <li class="<?= $action == 'cache' ? 'active' : ''?>"><a href="/log/Index/cache">缓存统计</a></li>
                 <li class="<?= $action == 'rank' ? 'active' : ''?>"><a href="/log/Index/rank">性能排行</a></li>
                 <li class="<?= $action == 'count' ? 'active' : ''?>"><a href="/log/Index/count">日志统计</a></li>
                 <li class="<?= $action == 'statistics' ? 'active' : ''?>"><a href="/log/Index/statistics">图表</a></li>
