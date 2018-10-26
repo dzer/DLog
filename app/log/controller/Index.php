@@ -870,7 +870,7 @@ class Index extends Controller
             $where['host'] = $host;
         }
         if (!empty($key)) {
-            $where['key'] = $key;
+            $where['key']['$regex'] = preg_quote(trim($key));
         }
         if (empty($sort)) {
             $sort = 'count';

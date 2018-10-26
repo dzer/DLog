@@ -74,7 +74,10 @@
                             <td><?= $log['set']?></td>
                             <td><?= $log['set_fail']?></td>
                             <td><?= $log['count']?></td>
-                            <td><span style="word-break: break-all;"><?= $log['request_uri']?></span></td>
+                            <td><a style="word-break: break-all;" href="/log/Index/just?project=all&log_type=&request_url=<?= $log['request_uri']?>">
+                                    <?= $log['request_uri']?>
+                                </a>
+                            </td>
                         </tr>
                         <?php
                     }
