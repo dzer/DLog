@@ -31,7 +31,7 @@ class Index extends Controller
     public function beforeAction()
     {
         parent::beforeAction();
-        if (!isset($_SESSION['userInfo']['email'])) {
+        if (Mll::app()->request->getAction() != 'cacheJson' && !isset($_SESSION['userInfo']['email'])) {
             return $this->redirect('/log/User/login'. '?callback=' . urlencode(Mll::app()->request->getUrl()));
         }
         return true;
@@ -922,6 +922,52 @@ class Index extends Controller
             'hosts' => $model->getCacheHosts(),
             'base_url' => '/' . Mll::app()->request->getModule()
                 . '/' . Mll::app()->request->getController() . '/' . Mll::app()->request->getAction()
+        ]);
+    }
+
+    public function cacheJson()
+    {
+        $curr_time = Mll::app()->request->get('curr_time', date('Y-m-d'));
+        $host = Mll::app()->request->get('host', 'all');
+        $key = Mll::app()->request->get('key');
+
+        $page = Mll::app()->request->get('page', 1, 'intval');
+        $page_size = Mll::app()->request->get('limit', 30, 'intval');
+        $sort = Mll::app()->request->get('sort', 'count');
+
+        $_GET['curr_time'] = $curr_time;
+        $_GET['host'] = $host;
+        $_GET['key'] = $key;
+        $_GET['sort'] = $sort;
+
+        $where = [];
+        if (!empty($host) && $host != 'all') {
+            $where['host'] = $host;
+        }
+        if (!empty($key)) {
+            $where['key']['$regex'] = preg_quote(trim($key));
+        }
+        if (empty($sort)) {
+            $sort = 'count';
+        }
+
+        $db = 'system_log_' . date('m_d', strtotime($curr_time));
+        $mongo = new Mongo();
+        $collection = $mongo->setDBName($db)->selectCollection('log_count_cache');
+        $model = new LogModel();
+        //echo json_encode($where);
+        $count = $mongo->count($where);
+
+        //计算分页
+        $page_count = ceil($count / $page_size);
+        $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
+
+        return $this->json([
+            'error' => 0,
+            'msg' => '成功',
+            'data' => [
+                'rs' => $rs,
+            ]
         ]);
     }
 }
