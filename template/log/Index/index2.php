@@ -102,11 +102,21 @@ include(__DIR__ . '/../common/header.php')
                 <div class="col-md-4">
                     <div id="exec_time" style="min-width:250px;height:250px;"></div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4" >
                     <h4>报警信息</h4>
-                    <table class="table table-striped table-hover">
+                    <table style="height: 230px; overflow-y: scroll;display: block" class="table table-striped table-hover">
                         <tbody>
-
+                        <?php
+                            foreach ($forewarningList as $_list) {
+                                ?>
+                                <tr>
+                                    <td>
+                                        <?= $_list['msg']; ?>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        ?>
                         </tbody>
                     </table>
                 </div>

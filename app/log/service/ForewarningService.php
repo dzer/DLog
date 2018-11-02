@@ -2,6 +2,7 @@
 
 namespace app\log\service;
 
+use Mll\Db\Mongo;
 use Mll\Mll;
 
 class ForewarningService
@@ -55,6 +56,10 @@ class ForewarningService
     {
         $rs = [];
         if (!empty(self::$msg)) {
+            //保存到数据库
+            $db = 'system_log';
+            $mongo = new Mongo();
+            $mongo->setDBName($db)->selectCollection('log_forewarning')->batchInsert(self::$msg);
             foreach (self::$msg as $k => $msg) {
                 foreach ($msg['sendType'] as $type => $user) {
                     if ($type == 'wechat') {

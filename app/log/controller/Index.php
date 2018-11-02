@@ -3,6 +3,7 @@
 namespace app\log\controller;
 
 use app\log\model\LogCountHourModel;
+use app\log\model\LogForewarningModel;
 use app\log\model\LogModel;
 use app\log\service\LogService;
 use Mll\Cache;
@@ -84,6 +85,15 @@ class Index extends Controller
         $count_error_rs = $logCountModel->countError($where, $expire, $curr_time);
         //统计
         $rs = $logCountModel->countByType($where, $expire, $curr_time);
+        //读取报警信息
+        $logForewarningModel = new LogForewarningModel();
+        $forewarningList = $logForewarningModel->getList(
+            [
+                'time' => ['$gte' => $curr_time, '$lte' => $curr_time . ' 23:59:59'],
+                'level' => ['$in' => ['error','warning']]
+            ],
+            ['time' => -1]
+        );
 
         return $this->render('index2', [
             'countData' => $countData,
@@ -97,6 +107,7 @@ class Index extends Controller
             'projects' => $model->getProjects(),
             'types' => array_merge($model->types, ['USER' => 'PC请求']),
             'servers' => $model->getServers(),
+            'forewarningList' => $forewarningList,
         ]);
     }
 
@@ -857,6 +868,7 @@ class Index extends Controller
         $page = Mll::app()->request->get('page', 1, 'intval');
         $page_size = Mll::app()->request->get('limit', 30, 'intval');
         $sort = Mll::app()->request->get('sort', 'count');
+        $json = Mll::app()->request->get('json', 0);
 
         $_GET['curr_time'] = $curr_time;
         $_GET['host'] = $host;
@@ -888,6 +900,16 @@ class Index extends Controller
         //计算分页
         $page_count = ceil($count / $page_size);
         $rs = Common::objectToArray($collection->find($where, [$sort => -1], ($page - 1) * $page_size, $page_size));
+
+        if ($json) {
+            return $this->json([
+                'error' => 0,
+                'msg' => '成功',
+                'data' => [
+                    'rs' => $rs
+                ]
+            ]);
+        }
 
         return $this->render('cache', [
             'rs' => $rs,

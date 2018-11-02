@@ -34,7 +34,8 @@ class ForewarningCountService
             return [
                 'time' => date('Y-m-d H:i:s'),
                 'msg' => 'DLOG日志报警：mongo链接失败，' . $msg,
-                'sendType' => $config['sendType']
+                'sendType' => $config['sendType'],
+                'level' => 'error'
             ];
         }
         return true;
@@ -80,6 +81,7 @@ class ForewarningCountService
                         'msg' => $msg,
                         'sendType' => $scheme['sendType'],
                         'rs' => $result,
+                        'level' => 'warning'
                     ];
                 }
                 if (isset($scheme['count']['avg']) && $scheme['count']['avg'] > 0
@@ -91,6 +93,7 @@ class ForewarningCountService
                         'msg' => $msg,
                         'sendType' => $scheme['sendType'],
                         'rs' => $result,
+                        'level' => 'warning'
                     ];
                 }
             }
@@ -138,7 +141,8 @@ class ForewarningCountService
                 'time' => date('Y-m-d H:i:s'),
                 'msg' => 'DLOG日志报警：近' . $config['time'] . '分钟，' . implode('，', $servers)
                     . ' 有日志记录！！！' . $mq_msg,
-                'sendType' => $config['sendType']
+                'sendType' => $config['sendType'],
+                'level' => 'notice'
             ];
         }
     }
@@ -179,7 +183,8 @@ class ForewarningCountService
                     'time' => date('Y-m-d H:i:s'),
                     'msg' => "DLOG日志报警：{$start_time}~" . date('H:i:s', strtotime($end_time))
                         . '，' . $config['msg'] . '，数量超过' . $count . '次，errorMsg：' . array_shift($error_msg),
-                    'sendType' => $config['sendType']
+                    'sendType' => $config['sendType'],
+                    'level' => 'error'
                 ];
             }
 

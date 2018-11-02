@@ -245,6 +245,7 @@ class LogService
                     'host' => $cache['host'],
                     'request_uri' => $log['content']['request_uri'],
                     'php' => $log['content']['php'],
+                    'xml' => $log['content']['xml'],
                     'length' => $cache['length'],
                     'expire' => $cache['expire']
                 ];
@@ -331,7 +332,7 @@ class LogService
                     ],
                 ]
             ]);
-            /*$mongo->setDBName('system_log');
+            $mongo->setDBName('system_log');
             $mongo->executeCommand([
                 'createIndexes' => 'log_count_hour',
                 'indexes' => [
@@ -340,13 +341,26 @@ class LogService
                         'name' => 'date_-1_project_1_type_1'
                     ],
                 ]
-            ]);*/
+            ]);
+            $mongo->setDBName('system_log');
+            $mongo->executeCommand([
+                'createIndexes' => 'log_forewarning',
+                'indexes' => [
+                    [
+                        'key' => ['time' => -1],
+                        'name' => 'time_-1'
+                    ],
+                ]
+            ]);
             $mongoConfig = Mll::app()->config->get('db.mongo');
+            $is_test = $mongoConfig['host'] == '192.168.0.104:27050' ? true : false;
             $mongoConfig['database'] = 'admin';
-            $mongoConfig['username'] = 'root';
-            $mongoConfig['password'] = 'dsj4wKI*FWLsdf4';
+            $mongoConfig['username'] = $is_test ? '' : 'root';
+            $mongoConfig['password'] = $is_test ? '' : 'dsj4wKI*FWLsdf4';
+
             $mongo = new Mongo($mongoConfig);
-            $mongo->setDBName('system_log_' . date('m_d', strtotime('-4 day')));
+            $day = $is_test ? '-30 day' : '-7 day';
+            $mongo->setDBName('system_log_' . date('m_d', strtotime($day)));
             $mongo->executeCommand(['dropDatabase' => 1]);
             Cache::set($cacheKey, 1, 86400);
         }
